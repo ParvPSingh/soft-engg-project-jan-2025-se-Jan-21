@@ -30,7 +30,7 @@ The backend for the SE-Project is organized into the following directories:
    ```
 
 4. **Add a `.env` file to the root directory:**
-   Create a file named `.env` in the root directory and add the following content:
+   Create a file named `.env` in the backend directory and add the following content:
 
    ```
    GROQ_API_KEY=<your-groq-api-key>
