@@ -78,6 +78,7 @@ export default {
         password: this.password,
         studentId: this.studentId,
       });
+      this.$router.push('/mycourses');
     },
   },
 };

@@ -2,6 +2,11 @@ import { createRouter, createWebHashHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
+import MyCourses from "@/views/MyCourses.vue";
+import CoursePage from "@/views/CoursePage.vue";
+import InstructorView from "@/views/InstructorView.vue";
+import TaPage from "@/views/TaPage.vue";
+
 
 const routes = [
   {
@@ -28,6 +33,27 @@ const routes = [
     name: "register",
     component: RegisterView,
   },
+  {
+    path: "/mycourses",
+    name: "mycourses",
+    component: MyCourses,
+  },
+  {
+    path: "/coursepage",
+    name: "coursepage",
+    component: CoursePage,
+  },
+  {
+    path: "/instructor",
+    name: "instructor",
+    component: InstructorView,
+  },
+  {
+    path: "/ta",
+    name: "ta",
+    component: TaPage,
+  }
+  
 ];
 
 const router = createRouter({

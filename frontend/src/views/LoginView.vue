@@ -49,6 +49,7 @@ export default {
       email: "",
       password: "",
       role: "",
+      
     };
   },
   methods: {
@@ -58,7 +59,10 @@ export default {
         email: this.email,
         password: this.password,
         role: this.role,
+
       });
+      this.$router.push('/mycourses');
+;
     },
   },
 };
