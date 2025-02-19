@@ -25,6 +25,7 @@
         
         <aside class="chatbot">
           <h3>Ask your AI Pal - Autobot</h3>
+          <img src="../assets/chatbot.png" alt="">
           <div class="chat-box">
             <p><strong>Can you provide relevant study materials for Recursion?</strong></p>
             <p>Recommended study materials: WS3Schools, GeeksforGeeks, and Python Docs. Links available in the course materials.</p>
@@ -89,12 +90,12 @@
   .delete-course { background: #dc3545; color: white; }
   
   .analytics {
-    margin-bottom: 2rem;
+    margin-bottom: 0rem;
     text-align: center;
   }
   
   .analytics-image {
-    width: 300px;
+    width: 350px;
     height: auto;
   }
   
@@ -102,7 +103,7 @@
     background: #ffe4e1;
     padding: 1rem;
     border-radius: 8px;
-    width: 300px;
+    width: 800px;
   }
   
   .chat-box {

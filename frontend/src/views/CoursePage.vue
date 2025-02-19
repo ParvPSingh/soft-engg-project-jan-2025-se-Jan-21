@@ -19,11 +19,12 @@
             <ul>
               <li>1.1 Introduction</li>
               <li>1.2 Variables</li>
-              <li>Practice Assignment 1</li>
+              <li><router-link to="/prassignment"> Practice Assignment 1 </router-link></li>
               <li>Graded Assignment 1</li>
-              <li>PPA 1</li>
+              <li><router-link to="/prgassignment"> PPA 1</router-link></li>
               <li>GPA 1</li>
             </ul>
+            <li><router-link to="/weeklyperformance">Weekly Performance Report</router-link></li>
           </ul>
         </aside>
         

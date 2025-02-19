@@ -6,6 +6,10 @@ import MyCourses from "@/views/MyCourses.vue";
 import CoursePage from "@/views/CoursePage.vue";
 import InstructorView from "@/views/InstructorView.vue";
 import TaPage from "@/views/TaPage.vue";
+import TaQuery from "@/views/TaQuery.vue";
+import WeeklyPerformance from "@/views/WeeklyPerformance.vue";
+import PractiseAssignmnet from "@/views/PractiseAssignmnet.vue";
+import ProgrammingAssignmnet from "@/views/ProgrammingAssignmnet.vue";
 
 
 const routes = [
@@ -52,6 +56,26 @@ const routes = [
     path: "/ta",
     name: "ta",
     component: TaPage,
+  },
+  {
+    path: "/taquery",
+    name: "taquery",
+    component: TaQuery,
+  },
+  {
+    path: "/weeklyperformance",
+    name: "weeklyperformance",
+    component: WeeklyPerformance,
+  },
+  {
+    path: "/prassignment",
+    name: "prassignment",
+    component: PractiseAssignmnet,
+  },
+  {
+    path: "/prgassignment",
+    name: "prgassignment",
+    component: ProgrammingAssignmnet,
   }
   
 ];

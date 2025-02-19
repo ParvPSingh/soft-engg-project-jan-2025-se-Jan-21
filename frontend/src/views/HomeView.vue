@@ -18,6 +18,10 @@
         degree program.
       </p>
     </div>
+    <div class="chatbot">
+      <h3>Ask Your Pal</h3>
+      <img src="../assets/chatbot.png" alt="">
+    </div>
   </div>
 </template>
 
@@ -119,5 +123,12 @@ export default {
 .homeView {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+.chatbot {
+  max-width: 800px;
+  margin: 60px auto;
+  padding: 0 20px;
+  text-align: center;
+  animation: fadeIn 1s ease-in;
 }
 </style>

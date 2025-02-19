@@ -15,7 +15,7 @@
         <div class="actions">
           <button class="review-students">Review Students</button>
           <button class="approve-registration">Approve Registration</button>
-          <button class="student-queries">Student Queries</button>
+          <router-link to="/taquery"><button class="student-queries">  Student Queries </button></router-link>
         </div>
         
         <div class="analytics">

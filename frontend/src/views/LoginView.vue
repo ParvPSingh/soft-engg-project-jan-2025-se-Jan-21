@@ -61,7 +61,18 @@ export default {
         role: this.role,
 
       });
-      this.$router.push('/mycourses');
+      if (this.role === "student") {
+        this.$router.push('/mycourses');
+      }
+
+      if (this.role === "instructor") {
+        this.$router.push('/instructor'); 
+      }
+
+      if (this.role === "ta") {
+        this.$router.push('/ta');
+      }
+      
 ;
     },
   },
