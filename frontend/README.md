@@ -1,5 +1,5 @@
 # frontend
-# Team 21 Milestone 3
+# Team 17 Milestone 3
 
 ## Project setup
 ```
