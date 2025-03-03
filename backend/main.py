@@ -16,6 +16,7 @@ def create_app():
     app.security = Security(app, datastore=datastore)
     with app.app_context():
         import application.controllers
+        db.create_all()
     return app
 
 app = create_app()
