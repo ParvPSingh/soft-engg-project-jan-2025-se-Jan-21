@@ -8,30 +8,58 @@ from datetime import datetime, timedelta
 from application.database import db
 from collections import Counter
 from sqlalchemy import and_
+from flask import Flask, redirect, url_for
+from flask_login import LoginManager, login_user, logout_user, login_required
+from application.models import *
+
 
 @app.get('/')
 def home():
     return render_template("index.html")
 
-@app.post('/login_user')
-def user_login():
+
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.get_json()
+    name = data.get('name')
+    email = data.get('email')
+    password = data.get('password')
+    
+    if not name or not email or not password:
+        return jsonify({"error": "Missing required fields"}), 400
+    
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({"error": "Email already exists"}), 400
+    
+    new_user = User(name=name, email=email, password=password, active=True, fs_uniquifier=email)
+    
+    db.session.add(new_user)
+    db.session.commit()
+    
+    return jsonify({"message": "User created successfully"}), 201
+
+# Login route
+@app.route('/login', methods=['POST'])
+def login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
-    if not email:
-        return jsonify({"error_message": "email is not provided"}), 400
-    if not password:
-        return jsonify({"error_message": "password is not provided"}), 400
-
-    user = datastore.find_user(email=email)
-
-    if not user:
-        return jsonify({"error_message": "User was Not Found"}), 404
     
-    if (user.active==False):
-        return jsonify({"error_message": "You don't have access to the website"}), 401
+    if not email or not password:
+        return jsonify({"error": "Missing email or password"}), 400
+    
+    user = User.query.filter_by(email=email).first()
+    if not user or user.password != password:
+        return jsonify({"error": "Invalid email or password"}), 401
+    
+    login_user(user)
+    return jsonify({"message": "Login successful"}), 200
 
-    if check_password_hash(user.password, data.get("password")):
-        return jsonify({"name": user.name, "token": user.get_auth_token(), "email": user.email, "role": user.roles[0].name, "user_id": user.user_id, "active": user.active})
-    else:
-        return jsonify({"error_message": "Wrong Password"}), 400
+# Logout route
+@app.route('/logout', methods=['POST'])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"message": "Logout successful"}), 200
