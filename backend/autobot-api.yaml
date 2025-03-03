@@ -1,0 +1,210 @@
+openapi: 3.0.0
+info:
+  title: AutoBot Academic Assistant API
+  version: 1.2.0
+  description: Core API for AI-powered academic chatbot system
+
+paths:
+  /genai/concept_explainer:
+    post:
+      summary: Explain academic concepts using analogies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                concept:
+                  type: string
+                context:
+                  type: string
+                difficulty:
+                  type: string
+                  enum: [beginner, intermediate, advanced]
+      responses:
+        '200':
+          description: Conceptual explanation generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  explanation:
+                    type: string
+                  related_resources:
+                    type: array
+                    items: 
+                      type: string
+
+  /genai/learning_plan:
+    post:
+      summary: Generate personalized learning strategies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                course_performance:
+                  type: object
+      responses:
+        '200':
+          description: Customized learning plan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  weekly_schedule:
+                    type: array
+                    items:
+                      type: string
+
+  /conversations/context:
+    post:
+      summary: Start new conversation thread
+      responses:
+        '201':
+          description: New conversation thread created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  thread_id:
+                    type: string
+                  created_at:
+                    type: string
+    get:
+      summary: Retrieve conversation history
+      parameters:
+        - in: query
+          name: thread_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Conversation context
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /portal/navigation:
+    get:
+      summary: Get portal navigation guidance
+      parameters:
+        - in: query
+          name: section
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Navigation instructions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  path_instructions:
+                    type: array
+                    items: 
+                      type: string
+
+  /genai/code_assistant:
+    post:
+      summary: Programming feedback and debugging
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code_snippet:
+                  type: string
+                error_details:
+                  type: string
+      responses:
+        '200':
+          description: Debugging suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  improvements:
+                    type: array
+                    items: 
+                      type: string
+
+  /analytics/query_patterns:
+    get:
+      summary: Retrieve common student queries
+      parameters:
+        - in: query
+          name: course_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Frequent academic queries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  common_questions:
+                    type: array
+                    items: 
+                      type: string
+
+  /knowledge/resources:
+    put:
+      summary: Update educational materials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_resources:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        '200':
+          description: Resource update confirmation
+
+  /analytics/engagement:
+    get:
+      summary: Access engagement metrics
+      parameters:
+        - in: query
+          name: timeframe
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Engagement statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  active_users:
+                    type: integer
+                  popular_topics:
+                    type: array
+                    items: 
+                      type: string
