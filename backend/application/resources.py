@@ -157,6 +157,21 @@ create_knowledgebase_parser.add_argument("kb_name", type=str, required=True, hel
 create_knowledgebase_parser.add_argument("kb_type", type=str, required=True, help="Type is required")
 create_knowledgebase_parser.add_argument("kb_location", type=str, required=True, help="Location is required")
 
+genai_concept_parser = reqparse.RequestParser()
+genai_concept_parser.add_argument("concept", type=str, required=True, 
+                                help="Concept name is required")
+genai_concept_parser.add_argument("context", type=str)
+genai_concept_parser.add_argument("difficulty", type=str, required=True,
+                                choices=('beginner','intermediate','advanced'))
+
+genai_plan_parser = reqparse.RequestParser()
+genai_plan_parser.add_argument("user_id", type=str, required=True)
+genai_plan_parser.add_argument("course_performance", type=dict, required=True)
+
+code_assistant_parser = reqparse.RequestParser()
+code_assistant_parser.add_argument("code_snippet", type=str, required=True)
+code_assistant_parser.add_argument("error_details", type=str)
+
 class UserAPI(Resource):
     @marshal_with(user_out_fields)
     @auth_required("token")
@@ -759,6 +774,81 @@ class KnowledgeBaseAPI(Resource):
         db.session.commit()
         return "", 204
 
+
+class GenAIConceptExplainerAPI(Resource):
+    @auth_required("token")
+    @roles_required("Student", "Instructor", "TA")
+    def post(self):
+        args = genai_concept_parser.parse_args()
+        # Integrate with KnowledgeBase model
+        kb_resources = KnowledgeBase.query.filter(
+            KnowledgeBase.kb_name.ilike(f"%{args['concept']}%")
+        ).limit(3).all()
+        
+        return {
+            "explanation": f"AI-generated explanation of {args['concept']} for {args['difficulty']} level",
+            "related_resources": [resource.kb_location for resource in kb_resources]
+        }, 200
+
+class GenAILearningPlanAPI(Resource):
+    @auth_required("token")
+    @roles_required("Student", "Instructor")
+    def post(self):
+        args = genai_plan_parser.parse_args()
+        # Use Scores model for personalization
+        scores = Scores.query.filter_by(query_student_id=args['user_id']).all()
+        
+        return {
+            "weekly_schedule": [
+                f"Week {i}: Focus on {topic}" 
+                for i, topic in enumerate(['Foundations', 'Applications', 'Advanced Concepts'], 1)
+            ],
+            "performance_analysis": {s.query_assignment_id: s.score for s in scores}
+        }, 200
+
+class GenAICodeAssistantAPI(Resource):
+    @auth_required("token")
+    @roles_required("Student")
+    def post(self):
+        args = code_assistant_parser.parse_args()
+        # Connect with ProgQA model
+        similar_errors = ProgQA.query.filter(
+            ProgQA.prog_answer.ilike(f"%{args['error_details']}%")
+        ).limit(2).all()
+        
+        return {
+            "improvements": [
+                "Fix syntax error in line 45",
+                "Optimize database query"
+            ],
+            "similar_problems": [qa.prog_options for qa in similar_errors]
+        }, 200
+
+class ConversationAPI(Resource):
+    @auth_required("token")
+    def post(self):
+        new_thread = {
+            "thread_id": f"THREAD_{datetime.utcnow().timestamp()}",
+            "created_at": datetime.utcnow().isoformat()
+        }
+        return new_thread, 201
+
+    @auth_required("token")
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("thread_id", required=True, location='args')
+        args = parser.parse_args()
+        
+        # Sample implementation using Queries model
+        history = Queries.query.filter_by(
+            query_student_id=current_user.user_id
+        ).order_by(Queries.created_at.desc()).limit(5).all()
+        
+        return [{
+            "query": q.description,
+            "timestamp": q.created_at.isoformat()
+        } for q in history], 200
+
 api.add_resource(UserAPI, "/api/user/<string:username>", "/api/user")
 api.add_resource(CourseAPI, "/api/course/<int:course_id>", "/api/course")
 api.add_resource(LectureAPI, "/api/lecture/<int:lecture_id>", "/api/lecture")
@@ -767,3 +857,7 @@ api.add_resource(QAAPI, "/api/qas/<int:q_id>", "/api/qas")
 api.add_resource(EnrollmentAPI, "/api/enrollment/<int:enrollment_id>", "/api/enrollment")
 api.add_resource(FeedbackAPI, "/api/feedback/<int:feed_id>", "/api/feedback")
 api.add_resource(KnowledgeBaseAPI, "/api/knowledgebase/<int:kb_id>", "/api/knowledgebase")
+api.add_resource(GenAIConceptExplainerAPI, '/genai/concept_explainer')
+api.add_resource(GenAILearningPlanAPI, '/genai/learning_plan')
+api.add_resource(GenAICodeAssistantAPI, '/genai/code_assistant')
+api.add_resource(ConversationAPI, '/conversations/context')
