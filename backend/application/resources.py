@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, auth_required, roles_required
 from application.sec import datastore
 from flask import jsonify
+from flask_security import current_user
 from collections import Counter
 import matplotlib
 matplotlib.use('Agg')
@@ -206,7 +207,7 @@ class UserAPI(Resource):
             raise ValidationError(status_code=400, error_code="UVE1004", error_message="duplicate username")
         
         if not datastore.find_user(email=email):
-            new_user=datastore.create_user(name=name, email=email, password=generate_password_hash(password, method="sha256"), roles=['Student'])
+            new_user=datastore.create_user(name=name, email=email, password=generate_password_hash(password, method="pbkdf2:sha256"), roles=['Student'])
         db.session.commit()
 
         return new_user, 201
