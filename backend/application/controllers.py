@@ -77,3 +77,76 @@ def login():
 def logout():
     logout_user()
     return jsonify({"message": "Logout successful"}), 200
+
+@app.route('/api/user/<int:user_id>', methods=['GET'])
+@login_required
+def get_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    
+    return jsonify({
+        "id": user.user_id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.roles[0].name if user.roles else "User"
+    })
+
+@app.route('/api/user/<int:user_id>', methods=['PUT'])
+@login_required
+def update_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.get_json()
+    user.name = data.get('name', user.name)
+    if data.get('password'):
+        user.password = generate_password_hash(data['password'], method="pbkdf2:sha256")
+
+    db.session.commit()
+    return jsonify({"message": "User updated successfully"})
+
+@app.route('/api/user/<int:user_id>', methods=['DELETE'])
+@roles_required('admin')
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": "User deleted successfully"})
+
+@app.route('/api/user/change-password', methods=['PUT'])
+@login_required
+def change_password():
+    data = request.get_json()
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
+
+    if not old_password or not new_password:
+        return jsonify({"error": "Old and new passwords are required"}), 400
+
+    user = User.query.get(request.user_id)
+
+    if not check_password_hash(user.password, old_password):
+        return jsonify({"error": "Incorrect old password"}), 400
+
+    user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
+    db.session.commit()
+
+    return jsonify({"message": "Password changed successfully"}), 200
+
+@app.route('/api/users', methods=['GET'])
+@roles_required('admin')
+def get_all_users():
+    users = User.query.all()
+    user_list = [{
+        "id": user.user_id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.roles[0].name if user.roles else "User"
+    } for user in users]
+
+    return jsonify(user_list), 200
