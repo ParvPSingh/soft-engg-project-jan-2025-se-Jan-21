@@ -35,13 +35,20 @@
           </select>
         </div>
 
-        <button type="submit" class="login-button">Login</button>
+        <button type="submit" class="login-button" :disabled="loading">
+          {{ loading ? "Logging in..." : "Login" }}
+        </button>
+
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
       </form>
     </div>
   </div>
 </template>
 
 <script>
+import axios from "axios";
+import { eventBus } from "../components/NavBar.vue";  // Import event bus
+
 export default {
   name: "LoginView",
   data() {
@@ -49,22 +56,53 @@ export default {
       email: "",
       password: "",
       role: "",
+      loading: false,
+      errorMessage: "",
     };
   },
   methods: {
-    handleLogin() {
-      // TODO: Implement login logic here
-      console.log("Login attempt:", {
-        email: this.email,
-        password: this.password,
-        role: this.role,
-      });
+    async handleLogin() {
+      this.loading = true;
+      this.errorMessage = "";
+
+      try {
+        const response = await axios.post("http://127.0.0.1:5000/api/login", {
+          email: this.email,
+          password: this.password,
+        });
+
+        if (response.status === 200) {
+          const userData = response.data;
+
+          // Store user data in localStorage (can be used for authentication later)
+          localStorage.setItem("user", JSON.stringify(userData));
+          eventBus.emit("user-updated"); // Notify navbar of login
+
+          // Redirect based on role
+          if (this.role === "student") {
+            this.$router.push("/mycourses");
+          } else if (this.role === "instructor") {
+            this.$router.push("/instructor");
+          } else if (this.role === "ta") {
+            this.$router.push("/ta");
+          }
+        }
+      } catch (error) {
+        if (error.response && error.response.data.error_message) {
+          this.errorMessage = error.response.data.error_message;
+        } else {
+          this.errorMessage = "Invalid credentials. Please try again.";
+        }
+      } finally {
+        this.loading = false;
+      }
     },
   },
 };
 </script>
 
 <style scoped>
+/* Keeping the Same Theme */
 .login-container {
   min-height: 100vh;
   display: flex;
@@ -141,5 +179,21 @@ select:focus {
 
 .login-button:active {
   transform: scale(0.98);
+}
+
+/* Error Message Styling */
+.error-message {
+  color: red;
+  text-align: center;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 576px) {
+  .login-card {
+    width: 90%;
+    padding: 1.5rem;
+  }
 }
 </style>

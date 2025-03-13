@@ -24,20 +24,25 @@ def signup():
     name = data.get('name')
     email = data.get('email')
     password = data.get('password')
-    
+
     if not name or not email or not password:
         return jsonify({"error": "Missing required fields"}), 400
-    
+
     existing_user = User.query.filter_by(email=email).first()
     if existing_user:
         return jsonify({"error": "Email already exists"}), 400
-    
+
     hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
     new_user = User(name=name, email=email, password=hashed_password, active=True, fs_uniquifier=email)
-    
+
+    # Assign default role 'Student'
+    student_role = Role.query.filter_by(name="Student").first()
+    if student_role:
+        new_user.roles.append(student_role)
+
     db.session.add(new_user)
     db.session.commit()
-    
+
     return jsonify({"message": "User created successfully"}), 201
 
 # Login route
@@ -64,10 +69,11 @@ def login():
             "name": user.name,
             "token": user.get_auth_token(),
             "email": user.email,
-            "role": user.roles[0].name,
+            "role": user.roles[0].name if user.roles else "User",  # ✅ Prevents IndexError
             "user_id": user.user_id,
             "active": user.active
-        })
+        }), 200
+
     else:
         return jsonify({"error_message": "Wrong Password"}), 400
 

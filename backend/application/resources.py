@@ -850,6 +850,28 @@ class ConversationAPI(Resource):
             "timestamp": q.created_at.isoformat()
         } for q in history], 200
 
+
+
+#Om added:
+class MyCoursesAPI(Resource):
+    @auth_required("token")
+    def get(self):
+        print(f"Current User: {current_user}")  # Debugging line
+        if not current_user:
+            return {"message": "Unauthorized: User not found"}, 401
+
+        student_id = current_user.user_id
+        enrollments = Enrollment.query.filter_by(student_id=student_id).all()
+        if not enrollments:
+            return {"message": "No enrolled courses found"}, 404
+
+        courses = [{"course_id": e.course.course_id, "name": e.course.name} for e in enrollments]
+        return courses, 200
+
+
+
+
+
 api.add_resource(UserAPI, "/api/user/<string:username>", "/api/user")
 api.add_resource(CourseAPI, "/api/course/<int:course_id>", "/api/course")
 api.add_resource(LectureAPI, "/api/lecture/<int:lecture_id>", "/api/lecture")
@@ -862,3 +884,7 @@ api.add_resource(GenAIConceptExplainerAPI, '/genai/concept_explainer')
 api.add_resource(GenAILearningPlanAPI, '/genai/learning_plan')
 api.add_resource(GenAICodeAssistantAPI, '/genai/code_assistant')
 api.add_resource(ConversationAPI, '/conversations/context')
+
+#added later
+api.add_resource(MyCoursesAPI, "/api/mycourses")
+

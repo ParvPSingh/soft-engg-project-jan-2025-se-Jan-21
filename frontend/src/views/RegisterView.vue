@@ -47,13 +47,19 @@
           />
         </div>
 
-        <button type="submit" class="register-button">Register</button>
+        <button type="submit" class="register-button" :disabled="loading">
+          {{ loading ? "Registering..." : "Register" }}
+        </button>
+
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
       </form>
     </div>
   </div>
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   name: "RegisterView",
   data() {
@@ -62,28 +68,47 @@ export default {
       email: "",
       password: "",
       confirmPassword: "",
-      studentId: "",
+      loading: false,
+      errorMessage: "",
     };
   },
   methods: {
-    handleRegister() {
+    async handleRegister() {
       if (this.password !== this.confirmPassword) {
-        alert("Passwords do not match!");
+        this.errorMessage = "Passwords do not match!";
         return;
       }
-      // TODO: Implement registration logic here
-      console.log("Registration attempt:", {
-        name: this.name,
-        email: this.email,
-        password: this.password,
-        studentId: this.studentId,
-      });
+
+      this.loading = true;
+      this.errorMessage = "";
+
+      try {
+        const response = await axios.post("http://127.0.0.1:5000/signup", {
+          name: this.name,
+          email: this.email,
+          password: this.password,
+        });
+
+        if (response.status === 201) {
+          alert("Registration successful! Redirecting to login.");
+          this.$router.push("/login");
+        }
+      } catch (error) {
+        if (error.response && error.response.data.error) {
+          this.errorMessage = error.response.data.error;
+        } else {
+          this.errorMessage = "Something went wrong. Please try again.";
+        }
+      } finally {
+        this.loading = false;
+      }
     },
   },
 };
 </script>
 
 <style scoped>
+/* Keeping Your Theme */
 .register-container {
   min-height: 100vh;
   display: flex;
@@ -158,5 +183,21 @@ input:focus {
 
 .register-button:active {
   transform: scale(0.98);
+}
+
+/* Error Message Styling */
+.error-message {
+  color: red;
+  text-align: center;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+  .register-card {
+    width: 90%;
+    padding: 1.5rem;
+  }
 }
 </style>
