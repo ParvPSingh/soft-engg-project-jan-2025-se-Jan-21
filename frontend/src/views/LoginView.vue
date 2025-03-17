@@ -1,3 +1,4 @@
+<!-- filepath: d:\Desktop\soft-engg-project-jan-2025-se-Jan-21-main\soft-engg-project-jan-2025-se-Jan-21-main\frontend\src\views\LoginView.vue -->
 <template>
   <div class="login-container">
     <div class="login-card">
@@ -25,14 +26,8 @@
           />
         </div>
 
-        <div class="form-group">
-          <label for="role">Role</label>
-          <select id="role" v-model="role" required>
-            <option value="" disabled selected>Select your role</option>
-            <option value="student">Student</option>
-            <option value="instructor">Instructor</option>
-            <option value="ta">Teaching Assistant</option>
-          </select>
+        <div class="forgot-password">
+          <a href="#">Forgot password?</a>
         </div>
 
         <button type="submit" class="login-button" :disabled="loading">
@@ -41,20 +36,35 @@
 
         <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
       </form>
+
+      <div class="register-link">
+        Don't have an account? <router-link to="/register">Register</router-link>
+      </div>
     </div>
+    
+    <!-- Add the ChatBot_Student component here -->
+    <ChatBot_Student />
   </div>
 </template>
 
 <script>
+<<<<<<< HEAD
 import axios from "axios";
 import { eventBus } from "../components/NavBar.vue";  // Import event bus
+=======
+import ChatBot_Student from '@/components/ChatBot_Student.vue';
+>>>>>>> ca9e9ce0 (chatbot frontend)
 
 export default {
   name: "LoginView",
+  components: {
+    ChatBot_Student
+  },
   data() {
     return {
       email: "",
       password: "",
+<<<<<<< HEAD
       role: "",
       loading: false,
       errorMessage: "",
@@ -96,6 +106,18 @@ export default {
       } finally {
         this.loading = false;
       }
+=======
+    };
+  },
+  methods: {
+    handleLogin() {
+      // Add your login logic here
+      console.log("Login attempt:", {
+        email: this.email,
+        password: this.password,
+      });
+      // For example: this.$router.push('/dashboard');
+>>>>>>> ca9e9ce0 (chatbot frontend)
     },
   },
 };
@@ -109,6 +131,7 @@ export default {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  position: relative;
 }
 
 .login-card {
@@ -145,8 +168,7 @@ label {
   font-size: 0.9rem;
 }
 
-input,
-select {
+input {
   padding: 0.8rem;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -154,11 +176,20 @@ select {
   transition: border-color 0.3s ease;
 }
 
-input:focus,
-select:focus {
+input:focus {
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.forgot-password {
+  text-align: right;
+}
+
+.forgot-password a {
+  color: #3498db;
+  text-decoration: none;
+  font-size: 0.9rem;
 }
 
 .login-button {
@@ -181,6 +212,7 @@ select:focus {
   transform: scale(0.98);
 }
 
+<<<<<<< HEAD
 /* Error Message Styling */
 .error-message {
   color: red;
@@ -197,3 +229,22 @@ select:focus {
   }
 }
 </style>
+=======
+.register-link {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.register-link a {
+  color: #3498db;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
+}
+</style>
+>>>>>>> ca9e9ce0 (chatbot frontend)

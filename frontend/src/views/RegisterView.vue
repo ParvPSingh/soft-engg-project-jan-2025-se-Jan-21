@@ -54,14 +54,24 @@
         <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
       </form>
     </div>
+    
+    <!-- Add the ChatBot_TA component here -->
+    <ChatBot_TA />
   </div>
 </template>
 
 <script>
+<<<<<<< HEAD
 import axios from "axios";
+=======
+import ChatBot_TA from '@/components/ChatBot_TA.vue';
+>>>>>>> ca9e9ce0 (chatbot frontend)
 
 export default {
   name: "RegisterView",
+  components: {
+    ChatBot_TA
+  },
   data() {
     return {
       name: "",
