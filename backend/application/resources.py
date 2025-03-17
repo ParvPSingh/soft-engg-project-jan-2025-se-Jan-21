@@ -1,10 +1,11 @@
+from flask import Flask, request, jsonify
 from flask_restful import Resource, fields, marshal_with, reqparse, Api
 from application.database import db
 from application.models import User, Role, Course, Enrollment, InstructorAlloted, Lecture, Assignment, QA, ProgQA, Scores, Queries, Feedback, KnowledgeBase
 from application.validation import ValidationError
 from datetime import datetime, date, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, auth_required, roles_required
+from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, auth_required, roles_required, login_required, logout_user
 from application.sec import datastore
 from flask import jsonify
 from flask_security import current_user
@@ -13,7 +14,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+app = Flask(__name__)
+api = Api(app)
 api=Api()
 
 user_out_fields={
@@ -173,10 +175,70 @@ code_assistant_parser = reqparse.RequestParser()
 code_assistant_parser.add_argument("code_snippet", type=str, required=True)
 code_assistant_parser.add_argument("error_details", type=str)
 
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.get_json()
+    name = data.get('name')
+    email = data.get('email')
+    password = data.get('password')
+    
+    if not name or not email or not password:
+        return jsonify({"error": "Missing required fields"}), 400
+    
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({"error": "Email already exists"}), 400
+    
+    hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
+    new_user = User(name=name, email=email, password=hashed_password, active=True, fs_uniquifier=email)
+    
+    db.session.add(new_user)
+    db.session.commit()
+    
+    return jsonify({"message": "User created successfully"}), 201
+
+# Login route
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    if not email:
+        return jsonify({"error_message": "email is not provided"}), 400
+    if not password:
+        return jsonify({"error_message": "password is not provided"}), 400
+
+    user = datastore.find_user(email=email)
+
+    if not user:
+        return jsonify({"error_message": "User was Not Found"}), 404
+    
+    if not user.active:
+        return jsonify({"error_message": "You don't have access to the website"}), 401
+
+    if check_password_hash(user.password, password):
+        return jsonify({
+            "name": user.name,
+            "token": user.get_auth_token(),
+            "email": user.email,
+            "role": user.roles[0].name,
+            "user_id": user.user_id,
+            "active": user.active
+        })
+    else:
+        return jsonify({"error_message": "Wrong Password"}), 400
+
+# Logout route
+@app.route('/logout', methods=['POST'])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"message": "Logout successful"}), 200
+
 class UserAPI(Resource):
     @marshal_with(user_out_fields)
-    @auth_required("token")
-    @roles_required("Instructor")
+    #@auth_required("token")
+    #@roles_required("Instructor")
     def get(self, username):
         now_user=User.query.filter_by(name=username).first()
         if now_user:
