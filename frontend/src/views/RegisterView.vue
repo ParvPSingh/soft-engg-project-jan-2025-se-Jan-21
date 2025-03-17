@@ -61,11 +61,11 @@
 </template>
 
 <script>
-<<<<<<< HEAD
+
 import axios from "axios";
-=======
+
 import ChatBot_TA from '@/components/ChatBot_TA.vue';
->>>>>>> ca9e9ce0 (chatbot frontend)
+
 
 export default {
   name: "RegisterView",

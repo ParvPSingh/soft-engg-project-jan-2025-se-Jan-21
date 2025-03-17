@@ -1,4 +1,3 @@
-<!-- filepath: d:\Desktop\soft-engg-project-jan-2025-se-Jan-21-main\soft-engg-project-jan-2025-se-Jan-21-main\frontend\src\views\LoginView.vue -->
 <template>
   <div class="login-container">
     <div class="login-card">
@@ -41,19 +40,16 @@
         Don't have an account? <router-link to="/register">Register</router-link>
       </div>
     </div>
-    
-    <!-- Add the ChatBot_Student component here -->
+
+    <!-- ChatBot Component -->
     <ChatBot_Student />
   </div>
 </template>
 
 <script>
-<<<<<<< HEAD
 import axios from "axios";
-import { eventBus } from "../components/NavBar.vue";  // Import event bus
-=======
+import { eventBus } from "../components/NavBar.vue";  
 import ChatBot_Student from '@/components/ChatBot_Student.vue';
->>>>>>> ca9e9ce0 (chatbot frontend)
 
 export default {
   name: "LoginView",
@@ -64,8 +60,6 @@ export default {
     return {
       email: "",
       password: "",
-<<<<<<< HEAD
-      role: "",
       loading: false,
       errorMessage: "",
     };
@@ -84,47 +78,31 @@ export default {
         if (response.status === 200) {
           const userData = response.data;
 
-          // Store user data in localStorage (can be used for authentication later)
+          // Store user data
           localStorage.setItem("user", JSON.stringify(userData));
-          eventBus.emit("user-updated"); // Notify navbar of login
+          eventBus.emit("user-updated");
 
           // Redirect based on role
-          if (this.role === "student") {
+          if (userData.role === "student") {
             this.$router.push("/mycourses");
-          } else if (this.role === "instructor") {
+          } else if (userData.role === "instructor") {
             this.$router.push("/instructor");
-          } else if (this.role === "ta") {
+          } else if (userData.role === "ta") {
             this.$router.push("/ta");
           }
         }
       } catch (error) {
-        if (error.response && error.response.data.error_message) {
-          this.errorMessage = error.response.data.error_message;
-        } else {
-          this.errorMessage = "Invalid credentials. Please try again.";
-        }
+        this.errorMessage = error.response?.data?.error_message || "Invalid credentials. Please try again.";
       } finally {
         this.loading = false;
       }
-=======
-    };
-  },
-  methods: {
-    handleLogin() {
-      // Add your login logic here
-      console.log("Login attempt:", {
-        email: this.email,
-        password: this.password,
-      });
-      // For example: this.$router.push('/dashboard');
->>>>>>> ca9e9ce0 (chatbot frontend)
     },
   },
 };
 </script>
 
 <style scoped>
-/* Keeping the Same Theme */
+/* Styling remains unchanged */
 .login-container {
   min-height: 100vh;
   display: flex;
@@ -208,12 +186,6 @@ input:focus {
   background: #2980b9;
 }
 
-.login-button:active {
-  transform: scale(0.98);
-}
-
-<<<<<<< HEAD
-/* Error Message Styling */
 .error-message {
   color: red;
   text-align: center;
@@ -221,7 +193,6 @@ input:focus {
   margin-top: 10px;
 }
 
-/* Mobile Responsiveness */
 @media (max-width: 576px) {
   .login-card {
     width: 90%;
@@ -229,22 +200,3 @@ input:focus {
   }
 }
 </style>
-=======
-.register-link {
-  margin-top: 1.5rem;
-  text-align: center;
-  font-size: 0.9rem;
-  color: #7f8c8d;
-}
-
-.register-link a {
-  color: #3498db;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.register-link a:hover {
-  text-decoration: underline;
-}
-</style>
->>>>>>> ca9e9ce0 (chatbot frontend)

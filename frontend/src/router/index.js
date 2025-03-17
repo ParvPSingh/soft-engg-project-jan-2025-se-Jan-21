@@ -2,7 +2,7 @@ import { createRouter, createWebHashHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
-<<<<<<< HEAD
+
 import MyCourses from "@/views/MyCourses.vue";
 import CoursePage from "@/views/CoursePage.vue";
 import InstructorView from "@/views/InstructorView.vue";
@@ -11,9 +11,9 @@ import TaQuery from "@/views/TaQuery.vue";
 import WeeklyPerformance from "@/views/WeeklyPerformance.vue";
 import PractiseAssignmnet from "@/views/PractiseAssignmnet.vue";
 import ProgrammingAssignmnet from "@/views/ProgrammingAssignmnet.vue";
-=======
+
 import TADashboardView from '@/views/TADashboardView.vue';
->>>>>>> ca9e9ce0 (chatbot frontend)
+
 
 
 const routes = [
@@ -42,7 +42,7 @@ const routes = [
     component: RegisterView,
   },
   {
-<<<<<<< HEAD
+
     path: "/mycourses",
     name: "mycourses",
     component: MyCourses,
@@ -84,15 +84,15 @@ const routes = [
     path: "/prgassignment",
     name: "prgassignment",
     component: ProgrammingAssignmnet,
-  }
+  },
+  {
   
-=======
-    path: '/ta-dashboard',
-    name: 'TADashboard',
+    path: "/ta-dashboard",
+    name: "TADashboard",
     component: TADashboardView
   },
 
->>>>>>> ca9e9ce0 (chatbot frontend)
+
 ];
 
 const router = createRouter({

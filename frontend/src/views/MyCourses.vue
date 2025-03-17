@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
@@ -121,5 +121,143 @@ h1 {
 
 .btn-primary:hover {
   background: #2980b9;
+}
+</style> -->
+
+
+<template>
+  <div class="courses-page">
+    <header class="header">
+      <h1 class="page-title">📚 My Courses</h1>
+      <nav class="nav-links">
+        <a href="#" class="nav-item">Home</a>
+        <a href="#" class="nav-item">My Courses</a>
+        <a href="#" class="nav-item">About</a>
+      </nav>
+    </header>
+
+    <div class="courses-container">
+      <div class="course-card">
+        <h2>🐍 Python</h2>
+        <p>Learn the fundamentals of Python programming.</p>
+        <router-link to="/coursepage" class="view-course-button">View Course</router-link>
+      </div>
+
+      
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* Background and Layout */
+.courses-page {
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  background: linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%);
+  min-height: 100vh;
+  padding: 30px 20px;
+}
+
+/* Header */
+.header {
+  background-color: #2c3e50;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-radius: 8px;
+}
+
+.page-title {
+  font-size: 1.8rem;
+}
+
+/* Navigation */
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-item {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: 0.3s ease-in-out;
+}
+
+.nav-item:hover {
+  color: #f39c12;
+}
+
+/* Courses Container */
+.courses-container {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 50px;
+  flex-wrap: wrap;
+}
+
+/* Course Cards */
+.course-card {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 280px;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.course-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.course-card h2 {
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+  color: #34495e;
+}
+
+.course-card p {
+  font-size: 1rem;
+  color: #7f8c8d;
+  margin-bottom: 15px;
+}
+
+/* Buttons */
+.view-course-button {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 12px 18px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.view-course-button:hover {
+  background: #217dbb;
+  transform: scale(1.05);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .courses-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .course-card {
+    width: 90%;
+    max-width: 350px;
+  }
 }
 </style>
