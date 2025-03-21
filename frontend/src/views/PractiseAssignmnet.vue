@@ -89,11 +89,7 @@
     <div class="assignment-container">
       <header class="navbar">
         <h1 class="navbar-title">My Courses</h1>
-        <nav class="nav-links">
-          <a href="#" class="nav-item">Home</a>
-          <a href="#" class="nav-item">Assignments</a>
-          <a href="#" class="nav-item">Profile</a>
-        </nav>
+       
       </header>
   
       <div class="assignment-content">

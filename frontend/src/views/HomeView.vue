@@ -13,7 +13,10 @@
     <!-- Chatbot Section -->
     <div class="container text-center mt-4">
       <h3 class="animated-fade">Ask Your Pal</h3>
-      <img src="../assets/chatbot.png" alt="Chatbot" class="img-fluid chatbot-img animated-fade" />
+      <div class="chatbot-container">
+        <img src="../assets/chatbot.png" alt="Chatbot" class="img-fluid chatbot-img animated-fade" />
+        <span class="chatbot-tooltip">Chatbot is accessible only on course pages</span>
+      </div>
     </div>
   </div>
 </template>
@@ -51,10 +54,45 @@ export default {
 }
 
 /* Chatbot Image */
+.chatbot-container {
+  position: relative;
+  display: inline-block;
+}
+
 .chatbot-img {
   margin-top: 20px;
   max-width: 200px;
   height: auto;
+  cursor: pointer;
+  transition: transform 0.3s ease-in-out;
+}
+
+.chatbot-img:hover {
+  transform: scale(1.05);
+}
+
+/* Tooltip Styling */
+.chatbot-tooltip {
+  visibility: hidden;
+  width: 220px;
+  background-color: #2c3e50;
+  color: #fff;
+  text-align: center;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  position: absolute;
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Show tooltip on hover */
+.chatbot-container:hover .chatbot-tooltip {
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Fade-In Animation */
@@ -86,6 +124,11 @@ export default {
 
   .chatbot-img {
     max-width: 150px;
+  }
+
+  .chatbot-tooltip {
+    width: 180px;
+    font-size: 0.8rem;
   }
 }
 </style>

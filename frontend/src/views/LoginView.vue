@@ -83,11 +83,11 @@ export default {
           eventBus.emit("user-updated");
 
           // Redirect based on role
-          if (userData.role === "student") {
+          if (userData.role === "Student") {
             this.$router.push("/mycourses");
-          } else if (userData.role === "instructor") {
+          } else if (userData.role === "Instructor") {
             this.$router.push("/instructor");
-          } else if (userData.role === "ta") {
+          } else if (userData.role === "TA") {
             this.$router.push("/ta");
           }
         }

@@ -134,11 +134,8 @@
     <div class="course-page">
       <header class="header">
         <h1 class="course-title">Python Course</h1>
-        <nav class="nav-links">
-          <a href="#" class="nav-item">Home</a>
-          <a href="#" class="nav-item">My Courses</a>
-          <a href="#" class="nav-item">About</a>
-        </nav>
+
+       
       </header>
   
       <div class="container">
@@ -175,6 +172,8 @@
   </template>
   
   <script>
+import ChatBot_Student from '@/components/ChatBot_Student.vue';
+
   export default {
     data() {
       return {

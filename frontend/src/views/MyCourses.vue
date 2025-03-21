@@ -129,11 +129,7 @@ h1 {
   <div class="courses-page">
     <header class="header">
       <h1 class="page-title">📚 My Courses</h1>
-      <nav class="nav-links">
-        <a href="#" class="nav-item">Home</a>
-        <a href="#" class="nav-item">My Courses</a>
-        <a href="#" class="nav-item">About</a>
-      </nav>
+      
     </header>
 
     <div class="courses-container">
