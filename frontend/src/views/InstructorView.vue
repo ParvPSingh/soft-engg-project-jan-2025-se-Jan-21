@@ -33,12 +33,20 @@
           <input type="text" placeholder="Ask a question..." class="chat-input" />
         </aside>
       </div>
+      
+      <ChatBot_TA />
     </div>
   </template>
   
   <script>
+
+import ChatBot_TA from '../components/ChatBot_TA.vue';
+
   export default {
-    name: "InstructorPythonPage"
+    name: "InstructorView",
+    components: {
+      ChatBot_TA
+    }
   };
   </script>
   

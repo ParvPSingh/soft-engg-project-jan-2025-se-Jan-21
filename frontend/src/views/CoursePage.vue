@@ -168,13 +168,18 @@
           </div>
         </main>
       </div>
+      <ChatBot_Student />
     </div>
   </template>
   
   <script>
 import ChatBot_Student from '@/components/ChatBot_Student.vue';
 
+
   export default {
+    components: {
+      ChatBot_Student
+    },
     data() {
       return {
         openWeeks: [],

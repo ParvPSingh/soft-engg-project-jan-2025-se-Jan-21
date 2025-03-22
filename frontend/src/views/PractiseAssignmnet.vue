@@ -116,11 +116,16 @@
   
         <button class="submit-button" @click="submitAnswers">Submit</button>
       </div>
+      <ChatBot_Student />
     </div>
   </template>
   
   <script>
+  import ChatBot_Student from '@/components/ChatBot_Student.vue';
   export default {
+    components: {
+      ChatBot_Student
+    },
     data() {
       return {
         submitted: false,
