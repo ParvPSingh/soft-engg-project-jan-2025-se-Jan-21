@@ -128,3 +128,21 @@ class KnowledgeBase(db.Model):
     kb_type = db.Column(db.String(50), nullable=False)
     kb_location = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.current_timestamp())
+
+
+class StudentDoubt(db.Model):
+    __tablename__ = "StudentDoubt"
+    
+    doubt_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    doubt_text = db.Column(db.Text, nullable=False)
+    video_title = db.Column(db.String(255), nullable=False)  # Changed from video_id
+    
+    # Foreign key relationship with User model
+    # user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'), nullable=False)
+    
+    # Store student details
+    student_name = db.Column(db.String(255), nullable=False)  # New field for name
+    student_email = db.Column(db.String(255), nullable=False)  # New field for email
+    
+    # Relationship with User model
+    # student = db.relationship('User', backref=db.backref('doubts', lazy=True))
