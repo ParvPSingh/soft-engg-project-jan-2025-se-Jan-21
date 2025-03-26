@@ -134,11 +134,8 @@
     <div class="course-page">
       <header class="header">
         <h1 class="course-title">Python Course</h1>
-        <nav class="nav-links">
-          <a href="#" class="nav-item">Home</a>
-          <a href="#" class="nav-item">My Courses</a>
-          <a href="#" class="nav-item">About</a>
-        </nav>
+
+       
       </header>
   
       <div class="container">
@@ -169,15 +166,37 @@
             <iframe width="560" height="315" :src="currentLecture.video_link" frameborder="0" allowfullscreen></iframe>
             <p class="transcript">📜 Transcripts will appear here...</p>
           </div>
+          <div class="doubt-section">
+            <h3>Ask a Question</h3>
+            <textarea 
+              v-model="doubtText" 
+              placeholder="Type your question here"
+              class="doubt-textarea"
+            ></textarea>
+            <button @click="submitDoubt" :disabled="!isValid" class="submit-button">
+              Submit Question
+            </button>
+          </div>
         </main>
       </div>
+      <ChatBot_Student />
     </div>
   </template>
   
   <script>
+import ChatBot_Student from '@/components/ChatBot_Student.vue';
+import axios from 'axios';
+
+
+
   export default {
+    components: {
+      ChatBot_Student
+    },
     data() {
       return {
+        doubtText: '',
+        studentName: 'John Doe', // Replace with actual student name
         openWeeks: [],
         currentLecture: null,
         weeks: [
@@ -221,6 +240,7 @@
         ]
       };
     },
+    
     methods: {
       toggleWeek(weekNo) {
         if (this.openWeeks.includes(weekNo)) {
@@ -231,8 +251,103 @@
       },
       toggleLecture(lectureId) {
         this.currentLecture = this.weeks.flatMap(week => week.lectures).find(lecture => lecture.lecture_id === lectureId);
-      }
-    }
+      },
+      // async submitDoubt() {
+      //     if (!this.isValid || !this.currentLecture) {
+      //       alert('Please select a lecture before submitting a doubt.');
+      //       return;
+      //     }
+
+      //     try {
+      //       const response = await axios.post(
+      //         'http://127.0.0.1:5000/api/submit-doubt',
+      //         {
+      //           doubtText: this.doubtText,
+      //           videoTitle: this.currentLecture.title, // Send title instead of ID
+      //         },
+      //         {
+      //           withCredentials: true, // ✅ Send cookies/session data with the request
+      //         }
+      //       );
+
+      //       if (response.status === 201 || response.status === 200) {
+      //         alert('Your question has been submitted successfully!');
+      //         this.doubtText = '';
+      //       } else {
+      //         throw new Error('Failed to submit question');
+      //       }
+      //     } catch (error) {
+      //       console.error('Error submitting doubt:', error);
+      //       alert('Failed to submit your question. Please try again.');
+      //     }
+      //   }
+
+      // async submitDoubt() {
+      //     if (!this.isValid || !this.currentLecture) {
+      //       alert('Please select a lecture before submitting a doubt.');
+      //       return;
+      //     }
+          
+      //     try {
+      //       const response = await axios.post('http://127.0.0.1:5000/api/submit-doubt', {
+      //         doubtText: this.doubtText,
+      //         videoTitle: this.currentLecture.title // Send title instead of ID
+      //       });
+            
+      //       if (response.status === 201 || response.status === 200) {
+      //         alert('Your question has been submitted successfully!');
+      //         this.doubtText = '';
+      //       } else {
+      //         throw new Error('Failed to submit question');
+      //       }
+      //     } catch (error) {
+      //       console.error('Error submitting doubt:', error);
+      //       alert('Failed to submit your question. Please try again.');
+      //     }
+      //   }
+
+      async submitDoubt() {
+          if (!this.isValid || !this.currentLecture) {
+            alert('Please select a lecture before submitting a doubt.');
+            return;
+          }
+
+          // Retrieve user details from localStorage
+          const userData = JSON.parse(localStorage.getItem('user'));
+
+          if (!userData || !userData.name || !userData.email) {
+            alert('User information is missing. Please log in again.');
+            return;
+          }
+
+          try {
+            const response = await axios.post('http://127.0.0.1:5000/api/submit-doubt', {
+              doubtText: this.doubtText,
+              videoTitle: this.currentLecture.title, // Send title instead of ID
+              studentName: userData.name, // Send student name
+              studentEmail: userData.email // Send student email
+            });
+
+            if (response.status === 201 || response.status === 200) {
+              alert('Your question has been submitted successfully!');
+              this.doubtText = '';
+            } else {
+              throw new Error('Failed to submit question');
+            }
+          } catch (error) {
+            console.error('Error submitting doubt:', error);
+            alert('Failed to submit your question. Please try again.');
+          }
+        }
+
+      
+    },
+    computed: {
+            isValid() {
+              return this.doubtText.trim() !== '';
+            }
+          }
+    
   };
   </script>
   
@@ -368,5 +483,36 @@
     color: #7f8c8d;
     margin-top: 10px;
   }
+
+
+  .doubt-section {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.doubt-textarea {
+  width: 100%;
+  height: 150px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.submit-button {
+  background-color: #2980b9;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
   </style>
   
