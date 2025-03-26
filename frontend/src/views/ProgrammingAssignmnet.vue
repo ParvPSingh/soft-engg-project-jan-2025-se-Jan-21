@@ -1,130 +1,496 @@
 <template>
-    <div class="practice-programming-assignment">
-      <nav class="navbar">
-        <div class="nav-container">
-          <h2 class="nav-title">PYTHON</h2>
-          <h3 class="sub-title">PRACTICE PROGRAMMING ASSIGNMENT PAGE</h3>
-        </div>
+  <div class="course-page">
+    <!-- Header and Navigation from Graded Assignment -->
+    <header class="header">
+      <h1 class="course-title">Python Programming Assignment</h1>
+      <nav class="nav-links">
+        <router-link to="/home" class="nav-item">Home</router-link>
+        <router-link to="/mycourses" class="nav-item">My Courses</router-link>
+        <router-link to="/coursepage" class="nav-item">Python Course</router-link>
+        <router-link to="/aboutpage" class="nav-item">About</router-link>
       </nav>
-  
-      <div class="assignment-container">
-        <div class="assignment-box">
-          <p class="assignment-text">
-            Accept a non-zero integer as input. Print "Positive" if it is greater than zero and "Negative" if it is less than zero.
-          </p>
-          
-          <select class="language-dropdown">
-            <option>Python 3</option>
-            <option>Python 3.1</option>
-          </select>
-  
-          <div class="code-editor">
-            <textarea rows="8" cols="50" v-model="codeSnippet"></textarea>
-          </div>
-  
-          <div class="button-group">
-            <button class="test-cases">Test Cases</button>
-            <button class="test-run">Test Run</button>
-            <button class="autobot">Autobot! 🤖</button>
-            <button class="submit">Submit</button>
-          </div>
+    </header>
+
+    <div class="container">
+      <div class="assignment-content">
+        <!-- <header class="lecture-view"> -->
+          <!-- <h1 class="lecture-title">📖 Prime Number Checker</h1> -->
+        <!-- </header> -->
+        
+        <div class="problem-statement">
+          <h2>Prime Number Checker</h2>
+          <p>Write a function called <code>is_prime(n)</code> that checks if a number is prime.</p>
+          <p>A prime number is a natural number greater than 1 that is not a product of two smaller natural numbers.</p>
+          <p><strong>Function Signature:</strong> <code>def is_prime(n)</code></p>
+          <p><strong>Input:</strong> An integer <code>n</code> (1 ≤ n ≤ 10^6)</p>
+          <p><strong>Output:</strong> Return <code>True</code> if the number is prime, otherwise return <code>False</code></p>
         </div>
-  
-        <aside class="autobot-container">
-          <h3>Ask your pal - Autobot</h3>
-          <img src="../assets/chatbot.png" alt="">
-          <p class="autobot-question"><strong>Where am I going wrong?</strong></p>
-          <div class="autobot-response">
-            <p>The issue here is that <code>input()</code> takes the value as a string, so comparing it with 0 (an integer) causes an error.</p>
-            <p><strong>Correct Solution:</strong></p>
-            <pre>
-  num = int(input("Enter a non-zero integer: "))
-  if num > 0:
-      print("Positive")
-  else:
-      print("Negative")
-            </pre>
-          </div>
-        </aside>
+        
+        <div class="editor-container">
+          <textarea 
+            v-model="code" 
+            class="code-editor" 
+            spellcheck="false"
+            @keydown.tab.prevent="handleTab"
+          ></textarea>
+        </div>
+        
+        <div class="button-container">
+          <button @click="runCode" class="submit-button">Run Code</button>
+          <button @click="resetCode" class="retry-button">Reset</button>
+          <button @click="submitCode" class="submit-button">Submit</button>
+        </div>
+        
+        <div v-if="result" class="result" :class="{ success: isSuccess, error: !isSuccess }">
+          <h3>{{ resultTitle }}</h3>
+          <pre>{{ result }}</pre>
+        </div>
+        
+        <div v-if="showTestCases" class="test-cases">
+          <h3>Test Cases</h3>
+          <pre>{{ testCasesOutput }}</pre>
+        </div>
       </div>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    name: "PracticeProgrammingAssignment",
-    data() {
-      return {
-        codeSnippet: "num = input(\"Enter a non-zero integer: \")\nif num > 0:\n    print(\"Positive\")\nelse:\n    print(\"Negative\")"
-      };
+    <ChatBot_Student />
+  </div>
+</template>
+
+<script>
+import ChatBot_Student from '@/components/ChatBot_Student.vue';
+
+export default {
+  components: {
+    ChatBot_Student
+
+  },
+  name: 'ProgrammingAssignment',
+  data() {
+    return {
+      code: `def is_prime(n):
+    # Write your code here
+    pass
+
+# You can test your function with the following code
+# Uncomment to test
+# print(is_prime(7))  # Should return True
+# print(is_prime(10))  # Should return False
+`,
+      result: '',
+      isSuccess: false,
+      resultTitle: '',
+      showTestCases: false,
+      testCasesOutput: '',
+      pyodide: null,
+      isLoading: false
     }
-  };
-  </script>
-  
-  <style scoped>
-  .navbar {
-    background: #2c3e50;
-    color: white;
-    padding: 1rem;
-    text-align: center;
+  },
+  mounted() {
+    this.loadPyodide();
+    
+    // Add event listener for tab key in textarea
+    window.addEventListener('keydown', this.preventTabDefault);
+  },
+  beforeUnmount() {
+    window.removeEventListener('keydown', this.preventTabDefault);
+  },
+  methods: {
+    preventTabDefault(e) {
+      if (e.key === 'Tab' && e.target.classList.contains('code-editor')) {
+        e.preventDefault();
+      }
+    },
+    handleTab(e) {
+      // Insert 4 spaces at cursor position
+      const start = e.target.selectionStart;
+      const end = e.target.selectionEnd;
+      
+      this.code = this.code.substring(0, start) + '    ' + this.code.substring(end);
+      
+      // Move cursor position
+      this.$nextTick(() => {
+        e.target.selectionStart = e.target.selectionEnd = start + 4;
+      });
+    },
+    async loadPyodide() {
+      this.isLoading = true;
+      this.result = 'Loading Python environment...';
+      this.isSuccess = true;
+      this.resultTitle = 'Status';
+      
+      try {
+        // Dynamically load the Pyodide script
+        if (!window.loadPyodide) {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js';
+          script.async = true;
+          document.head.appendChild(script);
+          
+          await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+          });
+        }
+        
+        // Initialize Pyodide
+        this.pyodide = await window.loadPyodide();
+        await this.pyodide.loadPackagesFromImports('import sys');
+        
+        // Set up stdout capture
+        this.pyodide.runPython(`
+          import sys
+          import io
+          sys.stdout = io.StringIO()
+        `);
+        
+        this.result = 'Python environment loaded successfully!';
+        this.isSuccess = true;
+      } catch (error) {
+        this.result = `Failed to load Python environment: ${error.message}`;
+        this.isSuccess = false;
+        this.resultTitle = 'Error';
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async runCode() {
+      if (!this.pyodide) {
+        this.result = 'Python environment is still loading. Please wait...';
+        this.isSuccess = false;
+        this.resultTitle = 'Error';
+        return;
+      }
+      
+      if (this.isLoading) return;
+      
+      this.isLoading = true;
+      this.showTestCases = false;
+      
+      try {
+        // Reset stdout
+        this.pyodide.runPython('sys.stdout = io.StringIO()');
+        
+        // Run the user's code
+        await this.pyodide.runPythonAsync(`
+${this.code}
+
+# Test with a sample input
+try:
+    if 'is_prime' not in globals():
+        raise NameError("Function 'is_prime' not found in your code.")
+    result = is_prime(17)
+    print(f"Function executed successfully!\\nFor input 17, your function returned: {result}")
+except Exception as e:
+    print(f"Error: {str(e)}")
+        `);
+        
+        // Get the output
+        const output = this.pyodide.runPython("sys.stdout.getvalue()");
+        const error = output.includes("Error:");
+        
+        this.result = output;
+        this.isSuccess = !error;
+        this.resultTitle = error ? 'Error' : 'Success';
+      } catch (error) {
+        this.result = `Error executing code: ${error.message}`;
+        this.isSuccess = false;
+        this.resultTitle = 'Error';
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async submitCode() {
+      if (!this.pyodide) {
+        this.result = 'Python environment is still loading. Please wait...';
+        this.isSuccess = false;
+        this.resultTitle = 'Error';
+        return;
+      }
+      
+      if (this.isLoading) return;
+      
+      this.isLoading = true;
+      this.showTestCases = true;
+      
+      try {
+        // Reset stdout
+        this.pyodide.runPython('sys.stdout = io.StringIO()');
+        
+        // Run the test cases
+        await this.pyodide.runPythonAsync(`
+${this.code}
+
+def check_solution():
+    try:
+        # Check if the function exists
+        if 'is_prime' not in globals():
+            return False, "Error: Function 'is_prime' not found in your code."
+        
+        # Test cases
+        test_cases = [
+            (1, False),
+            (2, True),
+            (3, True),
+            (4, False),
+            (7, True),
+            (11, True),
+            (15, False),
+            (97, True),
+            (100, False),
+            (541, True)  # 100th prime number
+        ]
+        
+        # Run test cases
+        results = []
+        all_passed = True
+        
+        for num, expected in test_cases:
+            try:
+                result = is_prime(num)
+                passed = result == expected
+                if not passed:
+                    all_passed = False
+                results.append(f"Input: {num}, Expected: {expected}, Got: {result}, {'✓' if passed else '✗'}")
+            except Exception as e:
+                all_passed = False
+                results.append(f"Input: {num}, Error: {str(e)}")
+        
+        return all_passed, "\\n".join(results)
+    except Exception as e:
+        return False, f"Error: {str(e)}"
+
+success, message = check_solution()
+print(f"SUCCESS: {success}")
+print(f"MESSAGE: {message}")
+        `);
+        
+        // Get the output
+        const output = this.pyodide.runPython("sys.stdout.getvalue()");
+        const lines = output.split('\n');
+        
+        // Parse the results
+        const successLine = lines.find(line => line.startsWith('SUCCESS:'));
+        const success = successLine && successLine.includes('True');
+        
+        // Extract the message (test case results)
+        const messageIndex = lines.findIndex(line => line.startsWith('MESSAGE:'));
+        let message = '';
+        if (messageIndex >= 0) {
+          message = lines[messageIndex].replace('MESSAGE: ', '');
+          if (messageIndex + 1 < lines.length) {
+            message = lines.slice(messageIndex).join('\n').replace('MESSAGE: ', '');
+          }
+        } else {
+          message = 'Could not retrieve test results';
+        }
+        
+        this.testCasesOutput = message;
+        this.result = success 
+          ? 'Congratulations! Your solution passed all test cases.' 
+          : 'Your solution did not pass all test cases. Please check the details below.';
+        this.isSuccess = success;
+        this.resultTitle = success ? 'All Tests Passed!' : 'Tests Failed';
+      } catch (error) {
+        this.testCasesOutput = `Error executing code: ${error.message}`;
+        this.result = 'An error occurred while testing your code.';
+        this.isSuccess = false;
+        this.resultTitle = 'Error';
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    resetCode() {
+      this.code = `def is_prime(n):
+    # Write your code here
+    pass
+
+# You can test your function with the following code
+# Uncomment to test
+# print(is_prime(7))  # Should return True
+# print(is_prime(10))  # Should return False
+`;
+      this.result = '';
+      this.showTestCases = false;
+    }
   }
-  
-  .assignment-container {
-    display: flex;
-    justify-content: space-around;
-    padding: 1rem;
-  }
-  
-  .assignment-box {
-    width: 60%;
-    padding: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: #f8f9fa;
-  }
-  
-  .language-dropdown {
-    width: 100%;
-    padding: 0.5rem;
-    margin: 0.5rem 0;
-  }
-  
-  .code-editor textarea {
-    width: 100%;
-    border: 1px solid #ddd;
-    padding: 0.5rem;
-    font-family: monospace;
-  }
-  
-  .button-group {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1rem;
-  }
-  
-  .button-group button {
-    padding: 0.5rem 1rem;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-  
-  .test-cases { background: #3498db; color: white; }
-  .test-run { background: #2ecc71; color: white; }
-  .autobot { background: #f1c40f; color: black; }
-  .submit { background: #e74c3c; color: white; }
-  
-  .autobot-container {
-    width: 30%;
-    background: #ffe4e1;
-    padding: 1rem;
-    border-radius: 8px;
-  }
-  
-  .autobot-response {
-    background: white;
-    padding: 0.8rem;
-    border-radius: 5px;
-  }
-  </style>
-  
+}
+</script>
+
+<style scoped>
+/* Global Styling from Graded Assignment */
+.course-page {
+  font-family: 'Arial', sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+/* Header */
+.header {
+  background-color: #2c3e50;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-radius: 8px;
+}
+
+.course-title {
+  font-size: 1.8rem;
+}
+
+/* Navigation */
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-item {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: 0.3s ease-in-out;
+}
+
+.nav-item:hover {
+  color: #f39c12;
+}
+
+/* Container Layout */
+.container {
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Assignment Content */
+.assignment-content {
+  width: 100%;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Lecture View / Assignment Header */
+.lecture-view {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.lecture-title {
+  font-size: 1.5rem;
+  color: #2c3e50;
+}
+
+.problem-statement {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border-left: 4px solid #4CAF50;
+}
+
+.editor-container {
+  margin-bottom: 20px;
+}
+
+.code-editor {
+  width: 100%;
+  height: 300px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #2d2d2d;
+  color: #f8f8f2;
+  resize: vertical;
+  tab-size: 4;
+  -moz-tab-size: 4;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
+
+/* Button Container */
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+/* Submit Button */
+.submit-button {
+  background-color: #2980b9;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.submit-button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+/* Retry Button */
+.retry-button {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+/* Button Hover Effects */
+.submit-button:hover:not(:disabled),
+.retry-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.result {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.success {
+  background-color: #dff0d8;
+  color: #3c763d;
+  border: 1px solid #d6e9c6;
+}
+
+.error {
+  background-color: #f2dede;
+  color: #a94442;
+  border: 1px solid #ebccd1;
+}
+
+.test-cases {
+  margin-top: 20px;
+  background-color: #e8f4f8;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+pre {
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+</style>
