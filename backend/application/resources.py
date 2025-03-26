@@ -1,7 +1,7 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify,send_from_directory
 from flask_restful import Resource, fields, marshal_with, reqparse, Api
 from application.database import db
-from application.models import User, Role, Course, Enrollment, InstructorAlloted, Lecture, Assignment, QA, ProgQA, Scores, Queries, Feedback, KnowledgeBase
+from application.models import User, Role, Course, Enrollment, InstructorAlloted, Lecture, Assignment, QA, ProgQA, Scores, Queries, Feedback, KnowledgeBase, SupplementaryContent
 from application.validation import ValidationError
 from datetime import datetime, date, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -9,6 +9,9 @@ from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMix
 from application.sec import datastore
 from flask import jsonify
 from flask_security import current_user
+from werkzeug.utils import secure_filename
+import os
+
 from collections import Counter
 import matplotlib
 matplotlib.use('Agg')
@@ -17,6 +20,98 @@ import seaborn as sns
 app = Flask(__name__)
 api = Api(app)
 api=Api()
+
+
+UPLOAD_FOLDER = "static/uploads"
+ALLOWED_EXTENSIONS = {'pdf'}
+
+# Flask Config
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Ensure upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Define API response fields
+supplementary_out_fields = {
+    "id": fields.Integer,
+    "course_id": fields.Integer,
+    "week_no": fields.Integer,
+    "file_name": fields.String,
+    "file_url": fields.String
+}
+
+class SupplementaryContentAPI(Resource):
+
+    @marshal_with(supplementary_out_fields)
+    def get(self, course_id, week_no):
+        """Fetch supplementary materials for a specific course & week"""
+        materials = SupplementaryContent.query.filter_by(course_id=course_id, week_no=week_no).all()
+        if not materials:
+            return {"message": "No supplementary content found"}, 404
+        return materials, 200
+
+    
+    
+    def post(self):
+        """Upload a supplementary PDF"""
+        course_id = request.form.get("course_id")
+        week_no = request.form.get("week_no")
+
+        if not course_id or not week_no:
+            return {"error": "Course ID and Week number are required"}, 400
+
+        if 'file' not in request.files:
+            return {"error": "No file provided"}, 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return {"error": "No selected file"}, 400
+
+        # Validate file type
+        if file and file.filename.split('.')[-1].lower() in ALLOWED_EXTENSIONS:
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+
+            # Store relative path in DB
+            new_content = SupplementaryContent(
+                course_id=int(course_id),
+                week_no=int(week_no),
+                file_name=filename,
+                file_url=f"/static/uploads/{filename}"  # Relative URL
+            )
+            db.session.add(new_content)
+            db.session.commit()
+
+            return {"message": "File uploaded successfully", "file_url": new_content.file_url}, 201
+        else:
+            return {"error": "Invalid file format"}, 400
+
+    
+   
+    def delete(self, pdf_id):
+        """Delete a supplementary PDF"""
+        file_entry = SupplementaryContent.query.filter_by(id=pdf_id).first()
+        if not file_entry:
+            return {"error": "File not found"}, 404
+
+        # Remove from filesystem
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_entry.file_name)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+        # Remove from database
+        db.session.delete(file_entry)
+        db.session.commit()
+        
+        return {"message": "File deleted successfully"}, 200
+
+api.add_resource(SupplementaryContentAPI, 
+    "/api/supplementary",                        # POST: Upload
+    "/api/supplementary/<int:course_id>/<int:week_no>",  # GET: Fetch files
+    "/api/supplementary/<int:pdf_id>"            # DELETE: Remove file
+)
+
 
 user_out_fields={
     "id": fields.Integer, 

@@ -128,3 +128,18 @@ class KnowledgeBase(db.Model):
     kb_type = db.Column(db.String(50), nullable=False)
     kb_location = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.current_timestamp())
+
+
+    
+class SupplementaryContent(db.Model):
+    __tablename__ = 'SupplementaryContent'
+    
+    id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('Course.course_id'), nullable=False)
+    week_no = db.Column(db.Integer, nullable=False)
+    file_name = db.Column(db.String(255), nullable=False)
+    file_url = db.Column(db.String(255), nullable=False)
+    uploaded_at = db.Column(db.DateTime, server_default=db.func.current_timestamp())
+
+    # Relationship with Course
+    course = db.relationship('Course', backref=db.backref('supplementary_content', lazy=True, cascade="all, delete-orphan"))

@@ -1,14 +1,24 @@
 <template>
   <div class="container mt-4">
     <h1 class="text-center">Instructor Dashboard</h1>
+    <br>
+    <hr>
+    <br>
+
+    <!-- Centered Button for Supplementary Content Management -->
+    <div class="text-center mt-3">
+      <button @click="goToSupplementaryManage" class="btn btn-primary btn-lg">
+        Manage Supplementary Content
+      </button>
+    </div>
 
     <!-- Courses Section -->
-    <div v-if="courses.length" class="section">
+    <div v-if="courses.length" class="section mt-4">
       <h2>My Courses</h2>
       <div class="list-group">
-        <div 
-          v-for="course in courses" 
-          :key="course.course_id" 
+        <div
+          v-for="course in courses"
+          :key="course.course_id"
           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
         >
           <div>
@@ -49,7 +59,6 @@
         </li>
       </ul>
     </div>
-
   </div>
 </template>
 
@@ -110,6 +119,9 @@ export default {
     },
     async viewCourse(course_id) {
       this.$router.push(`/course/${course_id}`);
+    },
+    goToSupplementaryManage() {
+      this.$router.push("/supplymentary"); // Redirects to supplementary content page
     }
   },
   mounted() {

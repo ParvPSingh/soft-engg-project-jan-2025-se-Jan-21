@@ -14,7 +14,7 @@ import ProgrammingAssignmnet from "@/views/ProgrammingAssignmnet.vue";
 
 import TADashboardView from '@/views/TADashboardView.vue';
 
-
+import SupplymentaryContent from "@/views/SupplymentaryManage.vue";
 
 const routes = [
   {
@@ -92,6 +92,11 @@ const routes = [
     component: TADashboardView
   },
 
+  {
+    path: "/supplymentary",
+    name: "SupplymentaryContent",
+    component: SupplymentaryContent
+  }
 
 ];
 
