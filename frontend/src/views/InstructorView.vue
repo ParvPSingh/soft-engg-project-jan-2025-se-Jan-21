@@ -1,130 +1,141 @@
 <template>
-    <div class="instructor-page">
-      <nav class="navbar">
-        <div class="nav-container">
-          <h2 class="nav-title">Instructor - Python Course</h2>
-          <ul class="nav-links">
-            <li><router-link to="/">Home</router-link></li>
-            <li><router-link to="/dashboard">Dashboard</router-link></li>
-            <li><router-link to="/logout">Logout</router-link></li>
-          </ul>
-        </div>
-      </nav>
-      
-      <div class="content-container">
-        <div class="actions">
-          <button class="review-students">Review Students</button>
-          <button class="academic-content">Academic Content</button>
-          <button class="delete-course">Delete Course</button>
-        </div>
-        
-        <div class="analytics">
-          <h3>Course Analytics</h3>
-          <img src="../assets/instructorgraph.png" alt="Analytics Chart" class="analytics-image" />
-        </div>
-        
-        <aside class="chatbot">
-          <h3>Ask your AI Pal - Autobot</h3>
-          <img src="../assets/chatbot.png" alt="">
-          <div class="chat-box">
-            <p><strong>Can you provide relevant study materials for Recursion?</strong></p>
-            <p>Recommended study materials: WS3Schools, GeeksforGeeks, and Python Docs. Links available in the course materials.</p>
+  <div class="container mt-4">
+    <h1 class="text-center">Instructor Dashboard</h1>
+
+    <!-- Courses Section -->
+    <div v-if="courses.length" class="section">
+      <h2>My Courses</h2>
+      <div class="list-group">
+        <div 
+          v-for="course in courses" 
+          :key="course.course_id" 
+          class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+        >
+          <div>
+            <h5>{{ course.name }}</h5>
+            <p>{{ course.description }}</p>
           </div>
-          <input type="text" placeholder="Ask a question..." class="chat-input" />
-        </aside>
+          <button @click="viewCourse(course.course_id)" class="btn btn-primary">Manage</button>
+        </div>
       </div>
-      
-      <ChatBot_TA />
     </div>
-  </template>
-  
-  <script>
 
-import ChatBot_TA from '../components/ChatBot_TA.vue';
+    <!-- Students Section -->
+    <div v-if="students.length" class="section mt-4">
+      <h2>Enrolled Students</h2>
+      <ul class="list-group">
+        <li v-for="student in students" :key="student.id" class="list-group-item">
+          {{ student.name }} - {{ student.email }}
+        </li>
+      </ul>
+    </div>
 
-  export default {
-    name: "InstructorView",
-    components: {
-      ChatBot_TA
+    <!-- Assignments Section -->
+    <div v-if="assignments.length" class="section mt-4">
+      <h2>Assignments</h2>
+      <ul class="list-group">
+        <li v-for="assignment in assignments" :key="assignment.assignment_id" class="list-group-item">
+          Assignment #{{ assignment.assignment_no }} - Week {{ assignment.week_no }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- Feedback Section -->
+    <div v-if="feedbacks.length" class="section mt-4">
+      <h2>Student Feedback</h2>
+      <ul class="list-group">
+        <li v-for="feedback in feedbacks" :key="feedback.feed_id" class="list-group-item">
+          {{ feedback.feed_content }} - <strong>Rating:</strong> {{ feedback.feed_rating }}/5
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+
+export default {
+  name: "InstructorDashboard",
+  data() {
+    return {
+      courses: [],
+      students: [],
+      assignments: [],
+      feedbacks: []
+    };
+  },
+  methods: {
+    async fetchCourses() {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        const response = await axios.get(`http://127.0.0.1:5000/api/course/${user.user_id}`, {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+        this.courses = response.data;
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      }
+    },
+    async fetchStudents() {
+      try {
+        const response = await axios.get("http://127.0.0.1:5000/api/enrollment/1", {
+          headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem("user")).token}` },
+        });
+        this.students = response.data;
+      } catch (error) {
+        console.error("Error fetching students:", error);
+      }
+    },
+    async fetchAssignments() {
+      try {
+        const response = await axios.get("http://127.0.0.1:5000/api/assignment/1", {
+          headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem("user")).token}` },
+        });
+        this.assignments = response.data;
+      } catch (error) {
+        console.error("Error fetching assignments:", error);
+      }
+    },
+    async fetchFeedback() {
+      try {
+        const response = await axios.get("http://127.0.0.1:5000/api/feedback/1", {
+          headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem("user")).token}` },
+        });
+        this.feedbacks = response.data;
+      } catch (error) {
+        console.error("Error fetching feedback:", error);
+      }
+    },
+    async viewCourse(course_id) {
+      this.$router.push(`/course/${course_id}`);
     }
-  };
-  </script>
-  
-  <style scoped>
-  .navbar {
-    background: #2c3e50;
-    color: white;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  },
+  mounted() {
+    this.fetchCourses();
+    this.fetchStudents();
+    this.fetchAssignments();
+    this.fetchFeedback();
   }
-  
-  .nav-links {
-    list-style: none;
-    display: flex;
-    gap: 1.5rem;
-  }
-  
-  .nav-links a {
-    color: white;
-    text-decoration: none;
-    font-weight: 600;
-  }
-  
-  .content-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem;
-  }
-  
-  .actions {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-  }
-  
-  button {
-    padding: 0.8rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-  
-  .review-students { background: #28a745; color: white; }
-  .academic-content { background: #007bff; color: white; }
-  .delete-course { background: #dc3545; color: white; }
-  
-  .analytics {
-    margin-bottom: 0rem;
-    text-align: center;
-  }
-  
-  .analytics-image {
-    width: 350px;
-    height: auto;
-  }
-  
-  .chatbot {
-    background: #ffe4e1;
-    padding: 1rem;
-    border-radius: 8px;
-    width: 800px;
-  }
-  
-  .chat-box {
-    background: white;
-    padding: 0.8rem;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-  }
-  
-  .chat-input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  </style>
+};
+</script>
+
+<style scoped>
+.container {
+  max-width: 900px;
+  margin: auto;
+}
+.section {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+h1, h2 {
+  color: #2c3e50;
+}
+.list-group-item {
+  font-size: 1.1rem;
+}
+</style>

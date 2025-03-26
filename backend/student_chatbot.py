@@ -32,6 +32,7 @@ system_message_student = SystemMessage(
     - Provide explanations, hints, and study strategies without giving direct answers.  
     - Help students locate relevant sections in their course materials.  
     - Encourage academic integrity by guiding students toward self-learning.  
+    - Should not provide answers of questions directly. Instead provide a hint to the correct answer.
 
     **Guidelines:**  
     - DO NOT provide direct answers to assignments, quizzes, or exams.  
