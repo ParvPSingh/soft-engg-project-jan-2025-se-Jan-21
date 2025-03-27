@@ -1,17 +1,14 @@
-from flask import Flask, request, jsonify,send_from_directory
+from flask import Flask, request, jsonify
 from flask_restful import Resource, fields, marshal_with, reqparse, Api
 from application.database import db
-from application.models import User, Role, Course, Enrollment, InstructorAlloted, Lecture, Assignment, QA, ProgQA, Scores, Queries, Feedback, KnowledgeBase, SupplementaryContent
+from application.models import User, Role, Course, Enrollment, InstructorAlloted, Lecture, Assignment, QA, ProgQA, Scores, Queries, Feedback, KnowledgeBase
 from application.validation import ValidationError
 from datetime import datetime, date, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, auth_required, roles_required, login_required, logout_user
+from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, auth_required, roles_required, roles_accepted, login_required, logout_user
 from application.sec import datastore
 from flask import jsonify
 from flask_security import current_user
-from werkzeug.utils import secure_filename
-import os
-
 from collections import Counter
 import matplotlib
 matplotlib.use('Agg')
@@ -20,98 +17,6 @@ import seaborn as sns
 app = Flask(__name__)
 api = Api(app)
 api=Api()
-
-
-UPLOAD_FOLDER = "static/uploads"
-ALLOWED_EXTENSIONS = {'pdf'}
-
-# Flask Config
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# Ensure upload folder exists
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# Define API response fields
-supplementary_out_fields = {
-    "id": fields.Integer,
-    "course_id": fields.Integer,
-    "week_no": fields.Integer,
-    "file_name": fields.String,
-    "file_url": fields.String
-}
-
-class SupplementaryContentAPI(Resource):
-
-    @marshal_with(supplementary_out_fields)
-    def get(self, course_id, week_no):
-        """Fetch supplementary materials for a specific course & week"""
-        materials = SupplementaryContent.query.filter_by(course_id=course_id, week_no=week_no).all()
-        if not materials:
-            return {"message": "No supplementary content found"}, 404
-        return materials, 200
-
-    
-    
-    def post(self):
-        """Upload a supplementary PDF"""
-        course_id = request.form.get("course_id")
-        week_no = request.form.get("week_no")
-
-        if not course_id or not week_no:
-            return {"error": "Course ID and Week number are required"}, 400
-
-        if 'file' not in request.files:
-            return {"error": "No file provided"}, 400
-        
-        file = request.files['file']
-        if file.filename == '':
-            return {"error": "No selected file"}, 400
-
-        # Validate file type
-        if file and file.filename.split('.')[-1].lower() in ALLOWED_EXTENSIONS:
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
-
-            # Store relative path in DB
-            new_content = SupplementaryContent(
-                course_id=int(course_id),
-                week_no=int(week_no),
-                file_name=filename,
-                file_url=f"/static/uploads/{filename}"  # Relative URL
-            )
-            db.session.add(new_content)
-            db.session.commit()
-
-            return {"message": "File uploaded successfully", "file_url": new_content.file_url}, 201
-        else:
-            return {"error": "Invalid file format"}, 400
-
-    
-   
-    def delete(self, pdf_id):
-        """Delete a supplementary PDF"""
-        file_entry = SupplementaryContent.query.filter_by(id=pdf_id).first()
-        if not file_entry:
-            return {"error": "File not found"}, 404
-
-        # Remove from filesystem
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_entry.file_name)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-
-        # Remove from database
-        db.session.delete(file_entry)
-        db.session.commit()
-        
-        return {"message": "File deleted successfully"}, 200
-
-api.add_resource(SupplementaryContentAPI, 
-    "/api/supplementary",                        # POST: Upload
-    "/api/supplementary/<int:course_id>/<int:week_no>",  # GET: Fetch files
-    "/api/supplementary/<int:pdf_id>"            # DELETE: Remove file
-)
-
 
 user_out_fields={
     "id": fields.Integer, 
@@ -186,6 +91,13 @@ knowledgebase_out_fields = {
     "created_at": fields.DateTime
 }
 
+scores_out_fields = {
+    "score_id": fields.Integer,
+    "score_user_id": fields.Integer,
+    "week_no": fields.Integer,
+    "score": fields.Integer
+}
+
 create_user_parser=reqparse.RequestParser()
 create_user_parser.add_argument("id")
 create_user_parser.add_argument("name")
@@ -242,7 +154,7 @@ update_prog_qa_parser.add_argument("answer", type=str, required=True, help="Answ
 
 create_enrollment_parser = reqparse.RequestParser()
 create_enrollment_parser.add_argument("course_id", type=int, required=True, help="Course ID is required")
-create_enrollment_parser.add_argument("student_id", type=int, required=True, help="Student ID is required")
+create_enrollment_parser.add_argument("user_id", type=int, required=True, help="Student ID is required")
 
 create_feedback_parser = reqparse.RequestParser()
 create_feedback_parser.add_argument("feed_course_id", type=int, required=True, help="Course ID is required")
@@ -270,26 +182,30 @@ code_assistant_parser = reqparse.RequestParser()
 code_assistant_parser.add_argument("code_snippet", type=str, required=True)
 code_assistant_parser.add_argument("error_details", type=str)
 
+create_scores_parser = reqparse.RequestParser()
+create_scores_parser.add_argument("score_user_id", type=int, required=True, help="User ID is required")
+create_scores_parser.add_argument("week_no", type=int, required=True, help="Week number is required")
+create_scores_parser.add_argument("score", type=int, required=True, help="Score is required")
+
+
 @app.route('/signup', methods=['POST'])
 def signup():
     data = request.get_json()
     name = data.get('name')
     email = data.get('email')
     password = data.get('password')
-    
+
     if not name or not email or not password:
         return jsonify({"error": "Missing required fields"}), 400
-    
+
     existing_user = User.query.filter_by(email=email).first()
     if existing_user:
         return jsonify({"error": "Email already exists"}), 400
-    
+
     hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
-    new_user = User(name=name, email=email, password=hashed_password, active=False, fs_uniquifier=email)
-    
-    db.session.add(new_user)
+    datastore.create_user(name=name, email=email, password=hashed_password, roles=['Student'])
     db.session.commit()
-    
+
     return jsonify({"message": "User created successfully"}), 201
 
 # Login route
@@ -308,20 +224,18 @@ def login():
     if not user:
         return jsonify({"error_message": "User was Not Found"}), 404
     
-    
+    if not user.active:
+        return jsonify({"error_message": "You don't have access to the website"}), 401
 
     if check_password_hash(user.password, password):
-        if not user.active:
-            return jsonify({"error_message": "You account is currently in-active! Please try after sometime."}), 401
-        else:
-            return jsonify({
-                "name": user.name,
-                "token": user.get_auth_token(),
-                "email": user.email,
-                "role": user.roles[0].name,
-                "user_id": user.user_id,
-                "active": user.active
-            })
+        return jsonify({
+            "name": user.name,
+            "token": user.get_auth_token(),
+            "email": user.email,
+            "role": user.roles[0].name,
+            "user_id": user.user_id,
+            "active": user.active
+        })
     else:
         return jsonify({"error_message": "Wrong Password"}), 400
 
@@ -334,8 +248,8 @@ def logout():
 
 class UserAPI(Resource):
     @marshal_with(user_out_fields)
-    #@auth_required("token")
-    #@roles_required("Instructor")
+    @auth_required("token")
+    @roles_required("Instructor")
     def get(self, username):
         now_user=User.query.filter_by(name=username).first()
         if now_user:
@@ -445,8 +359,7 @@ class LectureAPI(Resource):
     
     @marshal_with(lecture_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def post(self):
         args = create_lecture_parser.parse_args()
         course_id = args.get("course_id")
@@ -475,8 +388,7 @@ class LectureAPI(Resource):
     
     @marshal_with(lecture_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def put(self, lecture_id):
         args = create_lecture_parser.parse_args()
         course_id = args.get("course_id")
@@ -506,8 +418,7 @@ class LectureAPI(Resource):
         return new_lecture, 201
     
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def delete(self, lecture_id):
         now_lec=Lecture.query.filter_by(lecture_id=lecture_id).first()
         if now_lec is None:
@@ -527,8 +438,7 @@ class AssignmentAPI(Resource):
     
     @marshal_with(assignment_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def post(self):
         args = create_assignment_parser.parse_args()
         course_id = args.get("course_id")
@@ -550,8 +460,7 @@ class AssignmentAPI(Resource):
 
     @marshal_with(assignment_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def put(self, assignment_id):
         args = create_assignment_parser.parse_args()
         course_id = args.get("course_id")
@@ -576,8 +485,7 @@ class AssignmentAPI(Resource):
         return assignment, 200
 
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def delete(self, assignment_id):
         assignment = Assignment.query.filter_by(assignment_id=assignment_id).first()
         if not assignment:
@@ -597,8 +505,7 @@ class QAAPI(Resource):
 
     @marshal_with(qa_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def post(self):
         args = create_qa_parser.parse_args()
         qa_assignment_id = args.get("qa_assignment_id")
@@ -619,8 +526,7 @@ class QAAPI(Resource):
 
     @marshal_with(qa_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def put(self, q_id):
         args = create_qa_parser.parse_args()
         qa_assignment_id = args.get("qa_assignment_id")
@@ -645,8 +551,7 @@ class QAAPI(Resource):
         return qa, 200
 
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def delete(self, q_id):
         qa = QA.query.filter_by(q_id=q_id).first()
         if not qa:
@@ -666,8 +571,7 @@ class ProgQAAPI(Resource):
 
     @marshal_with(prog_qa_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def post(self):
         args = create_qa_parser.parse_args()
         prog_qa_assignment_id = args.get("prog_qa_assignment_id")
@@ -688,8 +592,7 @@ class ProgQAAPI(Resource):
 
     @marshal_with(prog_qa_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def put(self, prog_q_id):
         args = create_qa_parser.parse_args()
         prog_qa_assignment_id = args.get("prog_qa_assignment_id")
@@ -714,8 +617,7 @@ class ProgQAAPI(Resource):
         return prog_qa, 200
 
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def delete(self, prog_q_id):
         prog_qa = ProgQA.query.filter_by(prog_q_id=prog_q_id).first()
         if not prog_qa:
@@ -727,8 +629,7 @@ class ProgQAAPI(Resource):
 class EnrollmentAPI(Resource):
     @marshal_with(enrollment_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor")
     def get(self, enrollment_id):
         enrollment = Enrollment.query.filter_by(enrollment_id=enrollment_id).first()
         if not enrollment:
@@ -737,27 +638,40 @@ class EnrollmentAPI(Resource):
 
     @marshal_with(enrollment_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def post(self):
         args = create_enrollment_parser.parse_args()
         course_id = args.get("course_id")
-        student_id = args.get("student_id")
+        # Change this line to match the parser parameter name
+        user_id = args.get("user_id")  # Changed from student_id to user_id
+        enrollment_date = datetime.today()
 
-        if course_id is None:
-            raise ValidationError(status_code=400, error_code="EVE1002", error_message="Course ID is required")
-        if student_id is None:
-            raise ValidationError(status_code=400, error_code="EVE1003", error_message="Student ID is required")
+        # Add validation to check if course exists
+        course = Course.query.get(course_id)
+        if not course:
+            raise ValidationError(status_code=404, error_code="EVE1004", error_message="Course not found")
 
-        new_enrollment = Enrollment(course_id=course_id, student_id=student_id)
+        # Add validation to check if student exists
+        student = User.query.get(user_id)  # Changed from student_id to user_id
+        if not student:
+            raise ValidationError(status_code=404, error_code="EVE1005", error_message="Student not found")
+
+        # Check if enrollment already exists
+        existing_enrollment = Enrollment.query.filter_by(
+            course_id=course_id,
+            student_id=user_id  # Changed from student_id to user_id
+        ).first()
+        if existing_enrollment:
+            raise ValidationError(status_code=400, error_code="EVE1006", error_message="Student already enrolled in this course")
+
+        new_enrollment = Enrollment(course_id=course_id, student_id=user_id, enrollment_date=enrollment_date)  # Changed from student_id to user_id
         db.session.add(new_enrollment)
         db.session.commit()
         return new_enrollment, 201
 
     @marshal_with(enrollment_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def put(self, enrollment_id):
         args = create_enrollment_parser.parse_args()
         course_id = args.get("course_id")
@@ -778,8 +692,7 @@ class EnrollmentAPI(Resource):
         return enrollment, 200
 
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def delete(self, enrollment_id):
         enrollment = Enrollment.query.filter_by(enrollment_id=enrollment_id).first()
         if not enrollment:
@@ -791,8 +704,7 @@ class EnrollmentAPI(Resource):
 class FeedbackAPI(Resource):
     @marshal_with(feedback_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def get(self, feed_id):
         feedback = Feedback.query.filter_by(feed_id=feed_id).first()
         if not feedback:
@@ -801,8 +713,7 @@ class FeedbackAPI(Resource):
 
     @marshal_with(feedback_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def post(self):
         args = create_feedback_parser.parse_args()
         feed_course_id = args.get("feed_course_id")
@@ -827,8 +738,7 @@ class FeedbackAPI(Resource):
 
     @marshal_with(feedback_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def put(self, feed_id):
         args = create_feedback_parser.parse_args()
         feed_course_id = args.get("feed_course_id")
@@ -857,8 +767,7 @@ class FeedbackAPI(Resource):
         return feedback, 200
 
     @auth_required("token")
-    @roles_required("Instructor")
-    @roles_required("TA")
+    @roles_accepted("Instructor", "TA")
     def delete(self, feed_id):
         feedback = Feedback.query.filter_by(feed_id=feed_id).first()
         if not feedback:
@@ -870,7 +779,7 @@ class FeedbackAPI(Resource):
 class KnowledgeBaseAPI(Resource):
     @marshal_with(knowledgebase_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
+    @roles_accepted("Instructor")
     def get(self, kb_id):
         kb = KnowledgeBase.query.filter_by(kb_id=kb_id).first()
         if not kb:
@@ -879,7 +788,7 @@ class KnowledgeBaseAPI(Resource):
 
     @marshal_with(knowledgebase_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
+    @roles_accepted("Instructor")
     def post(self):
         args = create_knowledgebase_parser.parse_args()
         kb_name = args.get("kb_name")
@@ -900,7 +809,7 @@ class KnowledgeBaseAPI(Resource):
 
     @marshal_with(knowledgebase_out_fields)
     @auth_required("token")
-    @roles_required("Instructor")
+    @roles_accepted("Instructor")
     def put(self, kb_id):
         args = create_knowledgebase_parser.parse_args()
         kb_name = args.get("kb_name")
@@ -925,7 +834,7 @@ class KnowledgeBaseAPI(Resource):
         return kb, 200
 
     @auth_required("token")
-    @roles_required("Instructor")
+    @roles_accepted("Instructor")
     def delete(self, kb_id):
         kb = KnowledgeBase.query.filter_by(kb_id=kb_id).first()
         if not kb:
@@ -937,7 +846,7 @@ class KnowledgeBaseAPI(Resource):
 
 class GenAIConceptExplainerAPI(Resource):
     @auth_required("token")
-    @roles_required("Student", "Instructor", "TA")
+    @roles_accepted("Student", "Instructor", "TA")
     def post(self):
         args = genai_concept_parser.parse_args()
         # Integrate with KnowledgeBase model
@@ -952,7 +861,7 @@ class GenAIConceptExplainerAPI(Resource):
 
 class GenAILearningPlanAPI(Resource):
     @auth_required("token")
-    @roles_required("Student", "Instructor")
+    @roles_accepted("Student", "Instructor")
     def post(self):
         args = genai_plan_parser.parse_args()
         # Use Scores model for personalization
@@ -968,7 +877,7 @@ class GenAILearningPlanAPI(Resource):
 
 class GenAICodeAssistantAPI(Resource):
     @auth_required("token")
-    @roles_required("Student")
+    @roles_accepted("Student")
     def post(self):
         args = code_assistant_parser.parse_args()
         # Connect with ProgQA model
@@ -1009,7 +918,53 @@ class ConversationAPI(Resource):
             "timestamp": q.created_at.isoformat()
         } for q in history], 200
 
+class ScoresAPI(Resource):
+    @marshal_with(scores_out_fields)
+    @auth_required("token")
+    @roles_accepted("Instructor", "TA")
+    def get(self, score_id):
+        score = Scores.query.get(score_id)
+        if not score:
+            raise ValidationError(status_code=404, error_code="SVE1001", error_message="Score not found")
+        return score, 200
 
+    @marshal_with(scores_out_fields)
+    @auth_required("token")
+    @roles_accepted("Instructor", "TA")
+    def post(self):
+        args = create_scores_parser.parse_args()
+        score_user_id = args.get("score_user_id")
+        week_no = args.get("week_no")
+        score = args.get("score")
+
+        # Validate student exists
+        student = User.query.get(score_user_id)
+        if not student:
+            raise ValidationError(status_code=404, error_code="SVE1002", error_message="Student not found")
+
+        # Validate week number
+        if week_no < 0:
+            raise ValidationError(status_code=400, error_code="SVE1003", error_message="Week number cannot be negative")
+
+        # Create new score
+        new_score = Scores(
+            score_user_id=score_user_id,
+            week_no=week_no,
+            score=score
+        )
+        db.session.add(new_score)
+        db.session.commit()
+        return new_score, 201
+
+    @auth_required("token")
+    @roles_accepted("Instructor", "TA")
+    def delete(self, score_id):
+        score = Scores.query.get(score_id)
+        if not score:
+            raise ValidationError(status_code=404, error_code="SVE1001", error_message="Score not found")
+        db.session.delete(score)
+        db.session.commit()
+        return "", 204
 
 #Om added:
 class MyCoursesAPI(Resource):
@@ -1043,7 +998,7 @@ api.add_resource(GenAIConceptExplainerAPI, '/genai/concept_explainer')
 api.add_resource(GenAILearningPlanAPI, '/genai/learning_plan')
 api.add_resource(GenAICodeAssistantAPI, '/genai/code_assistant')
 api.add_resource(ConversationAPI, '/conversations/context')
+api.add_resource(ScoresAPI, "/api/scores", "/api/scores/<int:score_id>")
 
 #added later
 api.add_resource(MyCoursesAPI, "/api/mycourses")
-

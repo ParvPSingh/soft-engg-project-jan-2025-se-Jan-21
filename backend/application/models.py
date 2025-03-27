@@ -73,7 +73,6 @@ class Assignment(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.current_timestamp())
     # relationships
     qas = db.relationship('QA', backref='assignment', cascade="all, delete-orphan", lazy=True)
-    scores = db.relationship('Scores', backref='assignment', cascade="all, delete-orphan", lazy=True)
 
 class QA(db.Model):
     __tablename__ = 'QA'
@@ -94,8 +93,8 @@ class ProgQA(db.Model):
 class Scores(db.Model):
     __tablename__ = 'Scores'
     score_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    query_student_id = db.Column(db.Integer, db.ForeignKey('User.user_id'), nullable=False)
-    query_assignment_id = db.Column(db.Integer, db.ForeignKey('Assignment.assignment_id'), nullable=False)
+    score_user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'), nullable=False)
+    week_no = db.Column(db.Integer, nullable=True, default=0)
     score = db.Column(db.Integer, nullable=True, default=0)
     # relationships
     student = db.relationship('User', backref=db.backref('scores', lazy=True))
