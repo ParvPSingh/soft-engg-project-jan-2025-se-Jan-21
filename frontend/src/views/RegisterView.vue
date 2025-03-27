@@ -55,8 +55,7 @@
       </form>
     </div>
     
-    <!-- Add the ChatBot_TA component here -->
-    <ChatBot_TA />
+    
   </div>
 </template>
 
