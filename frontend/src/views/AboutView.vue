@@ -3,7 +3,7 @@
     <header class="header">
       <h1 class="page-title">📊 Student Profile</h1>
       <nav class="nav-links">
-        <router-link to="/home" class="nav-item">Home</router-link>
+        <router-link to="/" class="nav-item">Home</router-link>
         <router-link to="/mycourses" class="nav-item">My Courses</router-link>
         <router-link to="/aboutpage" class="nav-item">About</router-link>
       </nav>
@@ -85,12 +85,19 @@
         </section>
       </div>
     </div>
+    <!-- ChatBot_Student component -->
+    <ChatBot_Student />
   </div>
 </template>
 
 <script>
+import ChatBot_Student from '@/components/ChatBot_Student.vue';
+
 export default {
   name: 'AboutView',
+  components: {
+    ChatBot_Student
+  },
   data() {
     return {
       userName: ''
