@@ -41,8 +41,7 @@
       </div>
     </div>
 
-    <!-- ChatBot Component -->
-    <ChatBot_Student />
+    
   </div>
 </template>
 
