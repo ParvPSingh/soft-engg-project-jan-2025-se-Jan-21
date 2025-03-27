@@ -1,10 +1,11 @@
+<!-- filepath: d:\Desktop\soft-engg-project-jan-2025-se-Jan-21-main\soft-engg-project-jan-2025-se-Jan-21-main\frontend\src\views\ProgrammingAssignmnet.vue -->
 <template>
   <div class="course-page">
     <!-- Header and Navigation from Graded Assignment -->
     <header class="header">
       <h1 class="course-title">Python Programming Assignment</h1>
       <nav class="nav-links">
-        <router-link to="/home" class="nav-item">Home</router-link>
+        <router-link to="/" class="nav-item">Home</router-link>
         <router-link to="/mycourses" class="nav-item">My Courses</router-link>
         <router-link to="/coursepage" class="nav-item">Python Course</router-link>
         <router-link to="/aboutpage" class="nav-item">About</router-link>
@@ -13,10 +14,6 @@
 
     <div class="container">
       <div class="assignment-content">
-        <!-- <header class="lecture-view"> -->
-          <!-- <h1 class="lecture-title">📖 Prime Number Checker</h1> -->
-        <!-- </header> -->
-        
         <div class="problem-statement">
           <h2>Prime Number Checker</h2>
           <p>Write a function called <code>is_prime(n)</code> that checks if a number is prime.</p>
@@ -24,6 +21,16 @@
           <p><strong>Function Signature:</strong> <code>def is_prime(n)</code></p>
           <p><strong>Input:</strong> An integer <code>n</code> (1 ≤ n ≤ 10^6)</p>
           <p><strong>Output:</strong> Return <code>True</code> if the number is prime, otherwise return <code>False</code></p>
+        </div>
+        
+        <!-- AutoBot hint container -->
+        <div v-if="showingHint" class="hint-container">
+          <div class="hint-header">
+            <span class="hint-icon">💡</span>
+            <h4>AutoBot Hint:</h4>
+            <button class="close-hint" @click="hideHint">×</button>
+          </div>
+          <p class="hint-text">{{ currentHint }}</p>
         </div>
         
         <div class="editor-container">
@@ -39,6 +46,10 @@
           <button @click="runCode" class="submit-button">Run Code</button>
           <button @click="resetCode" class="retry-button">Reset</button>
           <button @click="submitCode" class="submit-button">Submit</button>
+          <!-- AutoBot hint button -->
+          <button @click="showHint" class="autobot-button">
+            <span class="autobot-icon">🤖</span> AutoBot!
+          </button>
         </div>
         
         <div v-if="result" class="result" :class="{ success: isSuccess, error: !isSuccess }">
@@ -62,14 +73,13 @@ import ChatBot_Student from '@/components/ChatBot_Student.vue';
 export default {
   components: {
     ChatBot_Student
-
   },
   name: 'ProgrammingAssignment',
   data() {
     return {
       code: `def is_prime(n):
-    # Write your code here
-    pass
+  # Write your code here
+  pass
 
 # You can test your function with the following code
 # Uncomment to test
@@ -82,7 +92,18 @@ export default {
       showTestCases: false,
       testCasesOutput: '',
       pyodide: null,
-      isLoading: false
+      isLoading: false,
+      
+      // AutoBot hint feature
+      showingHint: false,
+      currentHint: '',
+      hintLevel: 0,
+      hintMessages: [
+        "Think about what makes a number prime: it's a natural number greater than 1 that is only divisible by 1 and itself.",
+        "Start by handling edge cases: numbers less than 2 are not prime. Then check if the number is divisible by any smaller number.",
+        "For efficiency, you only need to check divisibility up to the square root of the number. Can you understand why?",
+        "Here's a pseudocode approach: (1) Check if n < 2, return False. (2) Check if n is divisible by any number from 2 to sqrt(n), return False if so. (3) Otherwise, return True."
+      ]
     }
   },
   mounted() {
@@ -95,11 +116,25 @@ export default {
     window.removeEventListener('keydown', this.preventTabDefault);
   },
   methods: {
+    // AutoBot hint methods
+    showHint() {
+      this.showingHint = true;
+      // Cycle through hints
+      this.currentHint = this.hintMessages[this.hintLevel % this.hintMessages.length];
+      this.hintLevel++;
+    },
+    
+    hideHint() {
+      this.showingHint = false;
+    },
+
+    // Code editor methods
     preventTabDefault(e) {
       if (e.key === 'Tab' && e.target.classList.contains('code-editor')) {
         e.preventDefault();
       }
     },
+    
     handleTab(e) {
       // Insert 4 spaces at cursor position
       const start = e.target.selectionStart;
@@ -112,6 +147,8 @@ export default {
         e.target.selectionStart = e.target.selectionEnd = start + 4;
       });
     },
+    
+    // Pyodide setup and code execution
     async loadPyodide() {
       this.isLoading = true;
       this.result = 'Loading Python environment...';
@@ -153,6 +190,7 @@ export default {
         this.isLoading = false;
       }
     },
+    
     async runCode() {
       if (!this.pyodide) {
         this.result = 'Python environment is still loading. Please wait...';
@@ -176,12 +214,12 @@ ${this.code}
 
 # Test with a sample input
 try:
-    if 'is_prime' not in globals():
-        raise NameError("Function 'is_prime' not found in your code.")
-    result = is_prime(17)
-    print(f"Function executed successfully!\\nFor input 17, your function returned: {result}")
+  if 'is_prime' not in globals():
+    raise NameError("Function 'is_prime' not found in your code.")
+  result = is_prime(17)
+  print(f"Function executed successfully!\\nFor input 17, your function returned: {result}")
 except Exception as e:
-    print(f"Error: {str(e)}")
+  print(f"Error: {str(e)}")
         `);
         
         // Get the output
@@ -199,6 +237,7 @@ except Exception as e:
         this.isLoading = false;
       }
     },
+    
     async submitCode() {
       if (!this.pyodide) {
         this.result = 'Python environment is still loading. Please wait...';
@@ -221,43 +260,43 @@ except Exception as e:
 ${this.code}
 
 def check_solution():
-    try:
-        # Check if the function exists
-        if 'is_prime' not in globals():
-            return False, "Error: Function 'is_prime' not found in your code."
-        
-        # Test cases
-        test_cases = [
-            (1, False),
-            (2, True),
-            (3, True),
-            (4, False),
-            (7, True),
-            (11, True),
-            (15, False),
-            (97, True),
-            (100, False),
-            (541, True)  # 100th prime number
-        ]
-        
-        # Run test cases
-        results = []
-        all_passed = True
-        
-        for num, expected in test_cases:
-            try:
-                result = is_prime(num)
-                passed = result == expected
-                if not passed:
-                    all_passed = False
-                results.append(f"Input: {num}, Expected: {expected}, Got: {result}, {'✓' if passed else '✗'}")
-            except Exception as e:
-                all_passed = False
-                results.append(f"Input: {num}, Error: {str(e)}")
-        
-        return all_passed, "\\n".join(results)
-    except Exception as e:
-        return False, f"Error: {str(e)}"
+  try:
+    # Check if the function exists
+    if 'is_prime' not in globals():
+      return False, "Error: Function 'is_prime' not found in your code."
+    
+    # Test cases
+    test_cases = [
+      (1, False),
+      (2, True),
+      (3, True),
+      (4, False),
+      (7, True),
+      (11, True),
+      (15, False),
+      (97, True),
+      (100, False),
+      (541, True)  # 100th prime number
+    ]
+    
+    # Run test cases
+    results = []
+    all_passed = True
+    
+    for num, expected in test_cases:
+      try:
+        result = is_prime(num)
+        passed = result == expected
+        if not passed:
+          all_passed = False
+        results.append(f"Input: {num}, Expected: {expected}, Got: {result}, {'✓' if passed else '✗'}")
+      except Exception as e:
+        all_passed = False
+        results.append(f"Input: {num}, Error: {str(e)}")
+    
+    return all_passed, "\\n".join(results)
+  except Exception as e:
+    return False, f"Error: {str(e)}"
 
 success, message = check_solution()
 print(f"SUCCESS: {success}")
@@ -299,10 +338,11 @@ print(f"MESSAGE: {message}")
         this.isLoading = false;
       }
     },
+    
     resetCode() {
       this.code = `def is_prime(n):
-    # Write your code here
-    pass
+  # Write your code here
+  pass
 
 # You can test your function with the following code
 # Uncomment to test
@@ -454,11 +494,83 @@ print(f"MESSAGE: {message}")
   transition: all 0.3s ease;
 }
 
+/* AutoBot Button */
+.autobot-button {
+  background-color: #9b59b6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.autobot-button:hover {
+  background-color: #8e44ad;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.autobot-icon {
+  font-size: 1.2rem;
+}
+
 /* Button Hover Effects */
 .submit-button:hover:not(:disabled),
 .retry-button:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Hint Container */
+.hint-container {
+  background-color: #f0f9ff;
+  border-left: 4px solid #3498db;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 4px;
+  animation: fadeIn 0.5s ease;
+}
+
+.hint-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.hint-icon {
+  font-size: 1.3rem;
+  margin-right: 8px;
+  color: #f39c12;
+}
+
+.hint-header h4 {
+  margin: 0;
+  color: #3498db;
+  flex-grow: 1;
+}
+
+.close-hint {
+  background: none;
+  border: none;
+  color: #7f8c8d;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.hint-text {
+  color: #34495e;
+  line-height: 1.5;
+  font-size: 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .result {
