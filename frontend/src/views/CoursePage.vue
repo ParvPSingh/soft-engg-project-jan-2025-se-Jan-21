@@ -1,139 +1,16 @@
-<!-- <template>
-    <div class="course-page">
-      <nav class="navbar">
-        <div class="nav-container">
-          <h2 class="nav-title">Python Course</h2>
-          <ul class="nav-links">
-            <li><router-link to="/">Home</router-link></li>
-            <li><router-link to="/mycourses">My Courses</router-link></li>
-            <li><router-link to="/about">About</router-link></li>
-          </ul>
-        </div>
-      </nav>
-      
-      <div class="content-container">
-        <aside class="sidebar">
-          <h3>Course Outline</h3>
-          <ul>
-            <li>Week 1</li>
-            <ul>
-              <li>1.1 Introduction</li>
-              <li>1.2 Variables</li>
-              <li><router-link to="/prassignment"> Practice Assignment 1 </router-link></li>
-              <li>Graded Assignment 1</li>
-              <li><router-link to="/prgassignment"> PPA 1</router-link></li>
-              <li>GPA 1</li>
-            </ul>
-            <li><router-link to="/weeklyperformance">Weekly Performance Report</router-link></li>
-          </ul>
-        </aside>
-        
-        <main class="video-section">
-          <h2>L1.1 A Quick Introduction to Variables</h2>
-          <iframe 
-            width="560" 
-            height="315" 
-            src="https://www.youtube.com/embed/8ndsDXohLMQ?si=KxAX_tAxLx5lSDk1" 
-            title="Python Introduction" 
-            frameborder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowfullscreen>
-          </iframe>
-          <p>Transcripts will appear here...</p>
-        </main>
-        
-        <aside class="chatbot">
-          <h3>Ask your AI Pal - Autobot</h3>
-          <img src="../assets/chatbot.png" alt="">
-          <div class="chat-box">
-            <p><strong>What is a variable in Python?</strong></p>
-            <p>In Python, a variable is used to store data that can be referenced and manipulated. It acts as a container for values and does not require explicit declaration of type.</p>
-          </div>
-          <input type="text" placeholder="Ask a question..." class="chat-input" />
-        </aside>
-      </div>
-    </div>
-  </template>
-  
-  <script>
-  export default {
-    name: "PythonCoursePage"
-  };
-  </script>
-  
-  <style scoped>
-  .navbar {
-    background: #2c3e50;
-    color: white;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .nav-container {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .nav-links {
-    list-style: none;
-    display: flex;
-    gap: 1.5rem;
-  }
-  
-  .nav-links a {
-    color: white;
-    text-decoration: none;
-    font-weight: 600;
-  }
-  
-  .content-container {
-    display: grid;
-    grid-template-columns: 1fr 2fr 1fr;
-    gap: 1rem;
-    padding: 2rem;
-  }
-  
-  .sidebar {
-    background: #f4f4f4;
-    padding: 1rem;
-    border-radius: 8px;
-  }
-  
-  .video-section {
-    text-align: center;
-  }
-  
-  .chatbot {
-    background: #ffe4e1;
-    padding: 1rem;
-    border-radius: 8px;
-  }
-  
-  .chat-box {
-    background: white;
-    padding: 0.8rem;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-  }
-  
-  .chat-input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  </style>
-   -->
+
 
 
    <template>
     <div class="course-page">
       <header class="header">
         <h1 class="course-title">Python Course</h1>
+        <nav class="nav-links">
+          <router-link to="home" class="nav-item">Home</router-link>
+          <router-link to="mycourses" class="nav-item">My Courses</router-link>
+          <router-link to="aboutpage" class="nav-item">About</router-link>
+        
+        </nav>
 
        
       </header>
@@ -154,7 +31,7 @@
               </div>
   
               <router-link to="prassignment" class="assignment-link">📝 Graded Assignment</router-link>
-              <router-link to="/programmingassignment" class="assignment-link">💻 Programming Assignment</router-link>
+              <router-link to="prgassignment" class="assignment-link">💻 Programming Assignment</router-link>
             </div>
           </div>
         </aside>
@@ -166,6 +43,17 @@
             <iframe width="560" height="315" :src="currentLecture.video_link" frameborder="0" allowfullscreen></iframe>
             <p class="transcript">📜 Transcripts will appear here...</p>
           </div>
+          <div class="doubt-section">
+            <h3>Ask a Question</h3>
+            <textarea 
+              v-model="doubtText" 
+              placeholder="Type your question here"
+              class="doubt-textarea"
+            ></textarea>
+            <button @click="submitDoubt" :disabled="!isValid" class="submit-button">
+              Submit Question
+            </button>
+          </div>
         </main>
       </div>
       <ChatBot_Student />
@@ -174,6 +62,8 @@
   
   <script>
 import ChatBot_Student from '@/components/ChatBot_Student.vue';
+import axios from 'axios';
+
 
 
   export default {
@@ -182,6 +72,8 @@ import ChatBot_Student from '@/components/ChatBot_Student.vue';
     },
     data() {
       return {
+        doubtText: '',
+        studentName: 'John Doe', // Replace with actual student name
         openWeeks: [],
         currentLecture: null,
         weeks: [
@@ -225,6 +117,7 @@ import ChatBot_Student from '@/components/ChatBot_Student.vue';
         ]
       };
     },
+    
     methods: {
       toggleWeek(weekNo) {
         if (this.openWeeks.includes(weekNo)) {
@@ -235,8 +128,103 @@ import ChatBot_Student from '@/components/ChatBot_Student.vue';
       },
       toggleLecture(lectureId) {
         this.currentLecture = this.weeks.flatMap(week => week.lectures).find(lecture => lecture.lecture_id === lectureId);
-      }
-    }
+      },
+      // async submitDoubt() {
+      //     if (!this.isValid || !this.currentLecture) {
+      //       alert('Please select a lecture before submitting a doubt.');
+      //       return;
+      //     }
+
+      //     try {
+      //       const response = await axios.post(
+      //         'http://127.0.0.1:5000/api/submit-doubt',
+      //         {
+      //           doubtText: this.doubtText,
+      //           videoTitle: this.currentLecture.title, // Send title instead of ID
+      //         },
+      //         {
+      //           withCredentials: true, // ✅ Send cookies/session data with the request
+      //         }
+      //       );
+
+      //       if (response.status === 201 || response.status === 200) {
+      //         alert('Your question has been submitted successfully!');
+      //         this.doubtText = '';
+      //       } else {
+      //         throw new Error('Failed to submit question');
+      //       }
+      //     } catch (error) {
+      //       console.error('Error submitting doubt:', error);
+      //       alert('Failed to submit your question. Please try again.');
+      //     }
+      //   }
+
+      // async submitDoubt() {
+      //     if (!this.isValid || !this.currentLecture) {
+      //       alert('Please select a lecture before submitting a doubt.');
+      //       return;
+      //     }
+          
+      //     try {
+      //       const response = await axios.post('http://127.0.0.1:5000/api/submit-doubt', {
+      //         doubtText: this.doubtText,
+      //         videoTitle: this.currentLecture.title // Send title instead of ID
+      //       });
+            
+      //       if (response.status === 201 || response.status === 200) {
+      //         alert('Your question has been submitted successfully!');
+      //         this.doubtText = '';
+      //       } else {
+      //         throw new Error('Failed to submit question');
+      //       }
+      //     } catch (error) {
+      //       console.error('Error submitting doubt:', error);
+      //       alert('Failed to submit your question. Please try again.');
+      //     }
+      //   }
+
+      async submitDoubt() {
+          if (!this.isValid || !this.currentLecture) {
+            alert('Please select a lecture before submitting a doubt.');
+            return;
+          }
+
+          // Retrieve user details from localStorage
+          const userData = JSON.parse(localStorage.getItem('user'));
+
+          if (!userData || !userData.name || !userData.email) {
+            alert('User information is missing. Please log in again.');
+            return;
+          }
+
+          try {
+            const response = await axios.post('http://127.0.0.1:5000/api/submit-doubt', {
+              doubtText: this.doubtText,
+              videoTitle: this.currentLecture.title, // Send title instead of ID
+              studentName: userData.name, // Send student name
+              studentEmail: userData.email // Send student email
+            });
+
+            if (response.status === 201 || response.status === 200) {
+              alert('Your question has been submitted successfully!');
+              this.doubtText = '';
+            } else {
+              throw new Error('Failed to submit question');
+            }
+          } catch (error) {
+            console.error('Error submitting doubt:', error);
+            alert('Failed to submit your question. Please try again.');
+          }
+        }
+
+      
+    },
+    computed: {
+            isValid() {
+              return this.doubtText.trim() !== '';
+            }
+          }
+    
   };
   </script>
   
@@ -372,5 +360,36 @@ import ChatBot_Student from '@/components/ChatBot_Student.vue';
     color: #7f8c8d;
     margin-top: 10px;
   }
+
+
+  .doubt-section {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.doubt-textarea {
+  width: 100%;
+  height: 150px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.submit-button {
+  background-color: #2980b9;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
   </style>
   

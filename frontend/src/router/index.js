@@ -11,6 +11,8 @@ import TaQuery from "@/views/TaQuery.vue";
 import WeeklyPerformance from "@/views/WeeklyPerformance.vue";
 import PractiseAssignmnet from "@/views/PractiseAssignmnet.vue";
 import ProgrammingAssignmnet from "@/views/ProgrammingAssignmnet.vue";
+import AboutView from "@/views/AboutView.vue";
+
 
 import TADashboardView from '@/views/TADashboardView.vue';
 
@@ -22,15 +24,15 @@ const routes = [
     name: "home",
     component: HomeView,
   },
-  {
-    path: "/about",
-    name: "about",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
-  },
+  // {
+  //   path: "/about",
+  //   name: "about",
+  //   // route level code-splitting
+  //   // this generates a separate chunk (about.[hash].js) for this route
+  //   // which is lazy-loaded when the route is visited.
+  //   component: () =>
+  //     import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
+  // },
   {
     path: "/login",
     name: "login",
@@ -90,6 +92,11 @@ const routes = [
     path: "/ta-dashboard",
     name: "TADashboard",
     component: TADashboardView
+  },
+  {
+    path: "/aboutpage",
+    name: "aboutpage",
+    component: AboutView
   },
 
   {

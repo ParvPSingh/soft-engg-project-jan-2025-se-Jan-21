@@ -143,3 +143,21 @@ class SupplementaryContent(db.Model):
 
     # Relationship with Course
     course = db.relationship('Course', backref=db.backref('supplementary_content', lazy=True, cascade="all, delete-orphan"))
+
+
+class StudentDoubt(db.Model):
+    __tablename__ = "StudentDoubt"
+    
+    doubt_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    doubt_text = db.Column(db.Text, nullable=False)
+    video_title = db.Column(db.String(255), nullable=False)  # Changed from video_id
+    
+    # Foreign key relationship with User model
+    # user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'), nullable=False)
+    
+    # Store student details
+    student_name = db.Column(db.String(255), nullable=False)  # New field for name
+    student_email = db.Column(db.String(255), nullable=False)  # New field for email
+    
+    # Relationship with User model
+    # student = db.relationship('User', backref=db.backref('doubts', lazy=True))

@@ -156,3 +156,31 @@ def get_all_users():
     } for user in users]
 
     return jsonify(user_list), 200
+
+
+
+
+@app.route('/api/submit-doubt', methods=['POST'])
+def submit_doubt():
+    data = request.json
+
+    if not data or 'doubtText' not in data or 'videoTitle' not in data or 'studentName' not in data or 'studentEmail' not in data:
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    try:
+        # Create a new doubt entry with dynamic student details
+        new_doubt = StudentDoubt(
+            video_title=data['videoTitle'],
+            doubt_text=data['doubtText'],
+            student_name=data['studentName'],  # Dynamically received
+            student_email=data['studentEmail']  # Dynamically received
+        )
+
+        db.session.add(new_doubt)
+        db.session.commit()
+
+        return jsonify({'message': 'Doubt submitted successfully'}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
