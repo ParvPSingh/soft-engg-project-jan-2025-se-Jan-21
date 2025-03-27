@@ -186,3 +186,33 @@ def submit_doubt():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+
+
+@app.route('/api/student-doubts', methods=['GET'])
+def get_student_doubts():
+    # Get optional query parameters for filtering
+    video_title = request.args.get('video_title')
+    
+    # Start with a base query
+    query = db.select(StudentDoubt)
+    
+    # Apply filters if provided
+    if video_title:
+        query = query.filter_by(video_title=video_title)
+    
+    # Execute the query and get results
+    doubts = db.session.execute(query.order_by(StudentDoubt.doubt_id.desc())).scalars()
+    
+    # Convert query results to a list of dictionaries
+    result = []
+    for doubt in doubts:
+        result.append({
+            'doubt_id': doubt.doubt_id,
+            'student_name': doubt.student_name,
+            'student_email': doubt.student_email,
+            'doubt_text': doubt.doubt_text,
+            'video_title': doubt.video_title
+        })
+    
+    return jsonify(result)
