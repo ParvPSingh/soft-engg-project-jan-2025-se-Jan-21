@@ -1,3 +1,4 @@
+<!-- filepath: d:\Desktop\soft-engg-project-jan-2025-se-Jan-21-main\soft-engg-project-jan-2025-se-Jan-21-main\frontend\src\views\InstructorView.vue -->
 <template>
   <div class="instructor-page">
     <nav class="navbar">
@@ -15,15 +16,7 @@
 
       <div v-if="courses.length" class="section">
         <h3>My Courses</h3>
-        <div class="list-container">
-          <div v-for="course in courses" :key="course.course_id" class="list-item">
-            <div>
-              <h5>{{ course.name }}</h5>
-              <p>{{ course.description }}</p>
-            </div>
-            <button @click="viewCourse(course.course_id)" class="manage">Manage</button>
-          </div>
-        </div>
+        <!-- Course content -->
       </div>
 
       <div v-if="students.length" class="section">
@@ -51,14 +44,21 @@
         </ul>
       </div>
     </div>
+
+    <!-- Add the TA ChatBot component here -->
+    <ChatBot_TA />
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import ChatBot_TA from '@/components/ChatBot_TA.vue';
 
 export default {
   name: "InstructorDashboard",
+  components: {
+    ChatBot_TA
+  },
   data() {
     return {
       courses: [],
@@ -130,7 +130,6 @@ export default {
   }
 };
 </script>
-
 <style scoped>
 .navbar {
   background: #2c3e50;
