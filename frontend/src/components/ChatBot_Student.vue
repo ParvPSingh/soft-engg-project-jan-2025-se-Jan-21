@@ -353,8 +353,8 @@
     position: fixed;
     bottom: 90px;
     right: 20px; /* Positioned on the right side instead of left */
-    width: 350px;
-    height: 500px;
+    width: 450px;
+    height: 600px;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
@@ -487,10 +487,12 @@
   
   .user-message,
   .bot-message {
-    padding: 12px 16px;
+    padding: 14px 18px; /* Increased padding */
     border-radius: 18px;
-    max-width: 70%;
+    max-width: 80%; /* Increased from 70% */
     position: relative;
+    font-size: 15px; /* Added font size */
+    line-height: 1.5; /* Improved line height */
   }
   
   .user-message {
@@ -509,7 +511,7 @@
   .user-message p,
   .bot-message p {
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.5;
     word-wrap: break-word;
   }
   
@@ -519,6 +521,7 @@
     position: absolute;
     bottom: 4px;
     right: 10px;
+    margin-top: 6px;
   }
   
   .user-message .message-time {
