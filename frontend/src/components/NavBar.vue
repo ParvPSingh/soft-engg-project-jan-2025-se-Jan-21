@@ -31,7 +31,7 @@
           <template v-else>
             <span class="navbar-text me-3 fw-bold">Welcome, {{ user.name }}</span>
             <template v-if="user.role === 'Student'">
-              <button class="btn btn-success me-2" @click="$router.push('/mycourses')">My Courses</button>
+              <!-- <button class="btn btn-success me-2" @click="$router.push('/mycourses')">My Courses</button> -->
             </template>
             <button class="btn btn-danger" @click="handleLogout">Logout</button>
           </template>

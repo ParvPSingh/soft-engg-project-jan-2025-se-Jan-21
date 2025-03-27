@@ -43,21 +43,25 @@
           </li>
         </ul>
       </div>
+      <div class="analytics">
+        <h3>Average Assignment Scores</h3>
+        <img src="../assets/tagraph.png" alt="Assignment Scores Chart" style="width: 80%;" class="analytics-image" />
+      </div>
     </div>
 
     <!-- Add the TA ChatBot component here -->
-    <ChatBot_TA />
+    <ChatBot_Instructor />
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import ChatBot_TA from '@/components/ChatBot_TA.vue';
+import ChatBot_Instructor from "@/components/ChatBot_Instructor.vue";
 
 export default {
   name: "InstructorDashboard",
   components: {
-    ChatBot_TA
+    ChatBot_Instructor
   },
   data() {
     return {

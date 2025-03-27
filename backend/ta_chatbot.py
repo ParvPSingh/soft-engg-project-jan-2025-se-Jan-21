@@ -21,6 +21,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 llm = ChatTogether(
     model="mistralai/Mistral-7B-Instruct-v0.2",
     temperature=0,
+    max_tokens=300,
     api_key=os.getenv("TOGETHER_API_KEY")  # Pass the API key
 )
 system_message_ta = SystemMessage(

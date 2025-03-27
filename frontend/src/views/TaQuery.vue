@@ -1,3 +1,4 @@
+<!-- filepath: d:\Desktop\soft-engg-project-jan-2025-se-Jan-21-main\soft-engg-project-jan-2025-se-Jan-21-main\frontend\src\views\TaQuery.vue -->
 <template>
   <div class="ta-queries-page">
     <nav class="navbar">
@@ -33,25 +34,20 @@
       </tbody>
     </table>
     
-    <aside class="chatbot">
-      <h3>Ask your pal - Autobot</h3>
-      <img src="../assets/chatbot.png" alt="Chatbot">
-      <p><strong>What are the most common queries students are raising?</strong></p>
-      <ul>
-        <li>Concept Understanding</li>
-        <li>Assignment & Scores</li>
-        <li>Study Materials & Practice</li>
-        <li>General Coding Help</li>
-      </ul>
-    </aside>
+    <!-- Remove static chatbot aside and only use the dynamic component -->
+    <ChatBot_TA />
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import ChatBot_TA from '@/components/ChatBot_TA.vue';
 
 export default {
   name: "TAQueriesPage",
+  components: {
+    ChatBot_TA
+  },
   data() {
     return {
       doubts: [],
@@ -157,41 +153,9 @@ th.name-column, th.email-column, th.video-column {
   color: #666;
 }
 
-.chatbot {
-  background: #ffe4e1;
-  padding: 1.5rem;
-  border-radius: 8px;
-  width: 300px;
-  margin: 2rem auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.chatbot h3 {
-  color: #2c3e50;
-  margin-top: 0;
-}
-
-.chatbot img {
-  max-width: 100px;
-  display: block;
-  margin: 1rem auto;
-}
-
-.chatbot ul {
-  padding-left: 1.5rem;
-}
-
-.chatbot li {
-  margin-bottom: 0.5rem;
-}
-
 @media (max-width: 768px) {
   .queries-table {
     font-size: 0.9rem;
-  }
-  
-  .chatbot {
-    width: 90%;
   }
 }
 </style>
