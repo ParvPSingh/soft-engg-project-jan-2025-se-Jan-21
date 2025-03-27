@@ -1,7 +1,29 @@
+<!-- filepath: d:\Desktop\soft-engg-project-jan-2025-se-Jan-21-main\soft-engg-project-jan-2025-se-Jan-21-main\frontend\src\views\HomeView.vue -->
 <template>
   <div class="homeView">
+    <!-- Student Profile Header Section -->
+    <div class="profile-header">
+      <div class="profile-container">
+        <!-- Left side with profile info -->
+        <div class="profile-left">
+          <div class="profile-avatar">{{ getInitials(userName) }}</div>
+          <div class="profile-info">
+            <h2>{{ userName }}</h2>
+            <p>BS Degree Student</p>
+          </div>
+        </div>
+        
+        <!-- Right side with navigation links -->
+        <div class="nav-links">
+          <router-link to="/" class="nav-item active">Home</router-link>
+          <router-link to="/mycourses" class="nav-item">My Courses</router-link>
+          <router-link to="/aboutpage" class="nav-item">Profile</router-link>
+        </div>
+      </div>
+    </div>
+
     <!-- Welcome Section -->
-    <div class="container text-center mt-0">
+    <div class="container text-center mt-5">
       <h1 class="welcome-title animated-fade">Welcome to the BS-Degree Program</h1>
       <p class="welcome-text animated-fade">
         Welcome to the learning portal powered by the auto bot - an AI agent designed
@@ -18,117 +40,120 @@
         <span class="chatbot-tooltip">Chatbot is accessible only on course pages</span>
       </div>
     </div>
+    
+    <!-- Add Student Chatbot -->
+    <ChatBot_Student />
   </div>
 </template>
 
 <script>
+import ChatBot_Student from '@/components/ChatBot_Student.vue';
+
 export default {
   name: "HomeView",
+  components: {
+    ChatBot_Student
+  },
+  data() {
+    return {
+      userName: 'Student'
+    }
+  },
+  mounted() {
+    // Get user data from localStorage if available
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (userData && userData.name) {
+      this.userName = userData.name;
+    }
+  },
+  methods: {
+    getInitials(name) {
+      if (!name) return 'S';
+      return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    },
+    handleLogout() {
+      localStorage.removeItem('user');
+      this.$router.push('/login');
+    }
+  }
 };
 </script>
 
 <style scoped>
-/* HomeView Background */
-.homeView {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+.profile-header {
+  background-color: white;
+  padding: 15px 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+
+.profile-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* This pushes content to left and right edges */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.profile-left {
+  display: flex;
+  align-items: center;
+}
+
+.profile-avatar {
+  width: 45px;
+  height: 45px;
+  background: #3498db;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  margin-right: 15px;
+}
+
+.profile-info {
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Center vertically */
 }
 
-/* Title & Welcome Text */
-.welcome-title {
+.profile-info h2 {
+  margin: 0;
+  font-size: 18px;
   color: #2c3e50;
-  font-size: 2.5rem;
-  font-weight: 600;
-  margin-top: 0px; /* Moves it down */
 }
 
-.welcome-text {
-  margin-top: 5px;
+.profile-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.nav-item {
   color: #34495e;
-  font-size: 1.2rem;
-  line-height: 1.6;
-  margin-bottom: 2rem;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: all 0.2s;
 }
 
-/* Chatbot Image */
-.chatbot-container {
-  position: relative;
-  display: inline-block;
+.nav-item:hover, .nav-item.active {
+  background-color: #f0f3f6;
+  color: #3498db;
 }
 
-.chatbot-img {
-  margin-top: 20px;
-  max-width: 200px;
-  height: auto;
-  cursor: pointer;
-  transition: transform 0.3s ease-in-out;
-}
-
-.chatbot-img:hover {
-  transform: scale(1.05);
-}
-
-/* Tooltip Styling */
-.chatbot-tooltip {
-  visibility: hidden;
-  width: 220px;
-  background-color: #2c3e50;
-  color: #fff;
-  text-align: center;
-  padding: 8px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  position: absolute;
-  bottom: -35px;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-}
-
-/* Show tooltip on hover */
-.chatbot-container:hover .chatbot-tooltip {
-  visibility: visible;
-  opacity: 1;
-}
-
-/* Fade-In Animation */
-.animated-fade {
-  opacity: 0;
-  animation: fadeIn 1s ease-in forwards;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Responsive Styles */
-@media (max-width: 768px) {
-  .welcome-title {
-    font-size: 2rem;
-  }
-
-  .welcome-text {
-    font-size: 1rem;
-  }
-
-  .chatbot-img {
-    max-width: 150px;
-  }
-
-  .chatbot-tooltip {
-    width: 180px;
-    font-size: 0.8rem;
-  }
-}
+/* Keep other existing styles */
 </style>
