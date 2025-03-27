@@ -3,11 +3,7 @@
       <nav class="navbar">
         <div class="nav-container">
           <h2 class="nav-title">TA - Python Course</h2>
-          <ul class="nav-links">
-            <li><router-link to="/">Home</router-link></li>
-            <li><router-link to="/dashboard">Dashboard</router-link></li>
-            <li><router-link to="/logout">Logout</router-link></li>
-          </ul>
+        
         </div>
       </nav>
       

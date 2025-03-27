@@ -285,7 +285,7 @@ def signup():
         return jsonify({"error": "Email already exists"}), 400
     
     hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
-    new_user = User(name=name, email=email, password=hashed_password, active=True, fs_uniquifier=email)
+    new_user = User(name=name, email=email, password=hashed_password, active=False, fs_uniquifier=email)
     
     db.session.add(new_user)
     db.session.commit()
@@ -308,18 +308,20 @@ def login():
     if not user:
         return jsonify({"error_message": "User was Not Found"}), 404
     
-    if not user.active:
-        return jsonify({"error_message": "You don't have access to the website"}), 401
+    
 
     if check_password_hash(user.password, password):
-        return jsonify({
-            "name": user.name,
-            "token": user.get_auth_token(),
-            "email": user.email,
-            "role": user.roles[0].name,
-            "user_id": user.user_id,
-            "active": user.active
-        })
+        if not user.active:
+            return jsonify({"error_message": "You account is currently in-active! Please try after sometime."}), 401
+        else:
+            return jsonify({
+                "name": user.name,
+                "token": user.get_auth_token(),
+                "email": user.email,
+                "role": user.roles[0].name,
+                "user_id": user.user_id,
+                "active": user.active
+            })
     else:
         return jsonify({"error_message": "Wrong Password"}), 400
 

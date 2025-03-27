@@ -61,18 +61,20 @@ def login():
     if not user:
         return jsonify({"error_message": "User was Not Found"}), 404
     
-    if not user.active:
-        return jsonify({"error_message": "You don't have access to the website"}), 401
+    
 
     if check_password_hash(user.password, password):
-        return jsonify({
-            "name": user.name,
-            "token": user.get_auth_token(),
-            "email": user.email,
-            "role": user.roles[0].name if user.roles else "User",  # ✅ Prevents IndexError
-            "user_id": user.user_id,
-            "active": user.active
-        }), 200
+        if not user.active:
+            return jsonify({"error_message": "Your account is in-active! Please try after sometime! Thank You!"}), 401
+        else:
+            return jsonify({
+                "name": user.name,
+                "token": user.get_auth_token(),
+                "email": user.email,
+                "role": user.roles[0].name if user.roles else "User",  # ✅ Prevents IndexError
+                "user_id": user.user_id,
+                "active": user.active
+            }), 200
 
     else:
         return jsonify({"error_message": "Wrong Password"}), 400
