@@ -3,7 +3,7 @@
     <header class="header">
       <h1 class="course-title">Python Graded Assignment</h1>
       <nav class="nav-links">
-        <router-link to="/home" class="nav-item">Home</router-link>
+        <router-link to="/" class="nav-item">Home</router-link>
         <router-link to="/mycourses" class="nav-item">My Courses</router-link>
         <router-link to="/coursepage" class="nav-item">Python Course</router-link>
 
