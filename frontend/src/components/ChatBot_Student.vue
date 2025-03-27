@@ -56,7 +56,8 @@
               <div v-else class="bot-message-container">
                 <div class="bot-avatar">AB</div>
                 <div class="bot-message">
-                  <p>{{ message.text }}</p>
+                  <!-- Use v-html for messages that might contain code blocks -->
+                  <div v-html="formatMessage(message.text)"></div>
                   <span class="message-time">{{ message.time }}</span>
                 </div>
               </div>
@@ -106,6 +107,8 @@
   </template>
   
   <script>
+  import hljs from 'highlight.js';
+  import 'highlight.js/styles/atom-one-dark.css';
   export default {
     data() {
       return {
@@ -123,6 +126,58 @@
       };
     },
     methods: {
+      formatMessage(text) {
+      // Check if the message contains code blocks (```code```)
+      if (text.includes('```')) {
+        // Split by code block delimiters
+        const segments = text.split(/(```[\s\S]*?```)/g);
+        
+        return segments.map(segment => {
+          // If this is a code block
+          if (segment.startsWith('```') && segment.endsWith('```')) {
+            // Extract the code and potential language identifier
+            let code = segment.slice(3, -3);
+            let language = '';
+            
+            // Check if the first line specifies a language
+            const firstLineEnd = code.indexOf('\n');
+            if (firstLineEnd > 0) {
+              const potentialLang = code.substring(0, firstLineEnd).trim();
+              if (/^[a-zA-Z0-9_]+$/.test(potentialLang)) {
+                language = potentialLang;
+                code = code.substring(firstLineEnd + 1);
+              }
+            }
+            
+            try {
+              // Apply syntax highlighting
+              const highlighted = language 
+                ? hljs.highlight(code, { language }).value
+                : hljs.highlightAuto(code).value;
+              
+              return `<pre class="code-block"><code>${highlighted}</code></pre>`;
+            } catch (e) {
+              // Fallback if highlighting fails
+              return `<pre class="code-block"><code>${this.escapeHtml(code)}</code></pre>`;
+            }
+          }
+          
+          // Regular text - escape HTML and convert newlines to <br>
+          return this.escapeHtml(segment).replace(/\n/g, '<br>');
+        }).join('');
+      }
+      
+      // If no code blocks, just escape HTML and convert newlines
+      return this.escapeHtml(text).replace(/\n/g, '<br>');
+    },
+    
+    // Helper method to escape HTML
+    escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    },
+
       toggleChat() {
         this.isChatOpen = !this.isChatOpen;
         if (this.isChatOpen) {
@@ -245,6 +300,11 @@
       link.rel = 'stylesheet';
       link.href = 'https://fonts.googleapis.com/icon?family=Material+Icons';
       document.head.appendChild(link);
+      // Add highlight.js CSS
+      const highlightCss = document.createElement('link');
+      highlightCss.rel = 'stylesheet';
+      highlightCss.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css';
+      document.head.appendChild(highlightCss);
     }
   };
   </script>
@@ -619,6 +679,30 @@
     background-color: #e6f7fc; /* Different color */
     border-color: #2193b0; /* Different color */
   }
+  :deep(.code-block) {
+  background-color: #282c34;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  overflow-x: auto;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+:deep(code) {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+/* Make sure the message time doesn't overlap with code blocks */
+.bot-message .message-time {
+  position: relative;
+  display: block;
+  text-align: right;
+  margin-top: 8px;
+  bottom: auto;
+  right: auto;
+}
   
   /* Mobile responsiveness */
   @media (max-width: 480px) {

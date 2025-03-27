@@ -11,6 +11,26 @@ from application.sec import datastore
 from application.models import db
 from werkzeug.security import generate_password_hash
 
+# Import necessary libraries for Qdrant vector database
+from dotenv import load_dotenv
+import os
+import logging
+from langchain.document_loaders import TextLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_together import TogetherEmbeddings
+from langchain_community.vectorstores import Qdrant
+from qdrant_client import QdrantClient
+
+from qdrant_client.http.models import Distance, VectorParams, HnswConfigDiff
+
+# Load environment variables from .env file
+load_dotenv()
+
+
+
+# Global variable to store the vector store
+student_vector_store = None
+
 def initialize_database():
     with app.app_context():
         # Check if database is already initialized by looking for a user
@@ -38,6 +58,70 @@ def initialize_database():
         else:
             print("Database already initialized.")
 
+def initialize_vector_store():
+    """Initialize the Qdrant vector store for student chatbot"""
+    global student_vector_store
+    
+    print("Starting vector store initialization...")
+    
+    # Load Course Materials
+    python_content_path = os.path.join(os.path.dirname(__file__), 'chatbot', 'assets', 'Intro-to-python.md')
+    
+    
+    try:
+        loader = TextLoader(python_content_path)
+        documents = loader.load()
+        
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size = 800, chunk_overlap = 150
+        )
+        chunks = text_splitter.split_documents(documents)
+        
+        
+        embedding_model = TogetherEmbeddings()
+        
+        # Connect to Qdrant Cloud
+        client = QdrantClient(
+            url=os.getenv("Qdrant_URL"), 
+            api_key=os.getenv("Qdrant_API_KEY")
+        )
+        
+        
+        # Create collection if it doesn't exist
+        collection_name = "student_docs"
+        vector_size = 768
+        hnsw_config=HnswConfigDiff(
+            m=16,           # Default, good balance for most cases
+            ef_construct=100,  # Increase for better recall during indexing
+            
+        )
+        
+        # Check if collection exists and create it if it doesn't
+        collections = client.get_collections().collections
+        collection_names = [collection.name for collection in collections]
+        if collection_name not in collection_names:
+            client.create_collection(
+                collection_name=collection_name,
+                vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE,hnsw_config=hnsw_config,on_disk=False)
+            )
+
+        
+        # Create vector store
+        student_vector_store = Qdrant.from_documents(
+            chunks, 
+            embedding_model,
+            url=os.getenv("Qdrant_URL"),
+            api_key=os.getenv("Qdrant_API_KEY"),
+            collection_name=collection_name
+        )
+        print("Vector store successfully initialized")
+        
+        return student_vector_store
+        
+    except Exception as e:
+        print(f"Error initializing vector store: {e}")
+        raise
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(DevelopmentConfig)
@@ -62,11 +146,16 @@ def create_app():
     #Student chatbot endpoint
     @app.route('/api/chatbot/student', methods=['POST'])
     def student_chatbot():
-        data = request.get_json()
-        user_query = data.get('message')
-        retrieved_context = retrieve_context_student(user_query)
-        response = call_autobot_student(user_query, retrieved_context)
-        return jsonify({'response': response.content})
+        try:
+            data = request.get_json()
+            user_query = data.get('message')
+            # This will use the pre-initialized vector store from student_chatbot module
+            retrieved_context = retrieve_context_student(user_query)
+            response = call_autobot_student(user_query, retrieved_context)
+            return jsonify({'response': response.content})
+        except Exception as e:
+            print(f"Error in student chatbot: {str(e)}")
+            return jsonify({'response': "I'm sorry, I'm having trouble connecting to my knowledge base right now. Please try again in a few moments."}), 500
 
     return app
 
@@ -74,4 +163,9 @@ app = create_app()
 
 if __name__ == '__main__':
     initialize_database()
-    app.run(debug=True)
+    # Initialize vector store when server starts
+    initialize_vector_store()
+    # Export the vector store to the student_chatbot module
+    import student_chatbot
+    student_chatbot.vector_store = student_vector_store
+    app.run(debug=True,use_reloader=False)

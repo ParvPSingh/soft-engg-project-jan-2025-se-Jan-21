@@ -1,5 +1,5 @@
 from flask import current_app as app, jsonify, request, render_template, send_file
-from flask_security import auth_required, roles_required
+from flask_security import auth_required, roles_required, roles_accepted
 from werkzeug.security import check_password_hash, generate_password_hash
 from .sec import datastore
 from application.models import User
@@ -33,14 +33,7 @@ def signup():
         return jsonify({"error": "Email already exists"}), 400
 
     hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
-    new_user = User(name=name, email=email, password=hashed_password, active=True, fs_uniquifier=email)
-
-    # Assign default role 'Student'
-    student_role = Role.query.filter_by(name="Student").first()
-    if student_role:
-        new_user.roles.append(student_role)
-
-    db.session.add(new_user)
+    datastore.create_user(name=name, email=email, password=hashed_password, roles=['Student'])
     db.session.commit()
 
     return jsonify({"message": "User created successfully"}), 201
@@ -116,7 +109,7 @@ def update_user(user_id):
     return jsonify({"message": "User updated successfully"})
 
 @app.route('/api/user/<int:user_id>', methods=['DELETE'])
-@roles_required('admin')
+@roles_required('Instructor')
 def delete_user(user_id):
     user = User.query.get(user_id)
     if not user:
@@ -147,7 +140,7 @@ def change_password():
     return jsonify({"message": "Password changed successfully"}), 200
 
 @app.route('/api/users', methods=['GET'])
-@roles_required('admin')
+@roles_accepted('Instructor', 'TA')
 def get_all_users():
     users = User.query.all()
     user_list = [{
@@ -186,3 +179,33 @@ def submit_doubt():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+
+
+@app.route('/api/student-doubts', methods=['GET'])
+def get_student_doubts():
+    # Get optional query parameters for filtering
+    video_title = request.args.get('video_title')
+    
+    # Start with a base query
+    query = db.select(StudentDoubt)
+    
+    # Apply filters if provided
+    if video_title:
+        query = query.filter_by(video_title=video_title)
+    
+    # Execute the query and get results
+    doubts = db.session.execute(query.order_by(StudentDoubt.doubt_id.desc())).scalars()
+    
+    # Convert query results to a list of dictionaries
+    result = []
+    for doubt in doubts:
+        result.append({
+            'doubt_id': doubt.doubt_id,
+            'student_name': doubt.student_name,
+            'student_email': doubt.student_email,
+            'doubt_text': doubt.doubt_text,
+            'video_title': doubt.video_title
+        })
+    
+    return jsonify(result)

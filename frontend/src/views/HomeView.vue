@@ -1,8 +1,8 @@
 <!-- filepath: d:\Desktop\soft-engg-project-jan-2025-se-Jan-21-main\soft-engg-project-jan-2025-se-Jan-21-main\frontend\src\views\HomeView.vue -->
 <template>
   <div class="homeView">
-    <!-- Student Profile Header Section -->
-    <div class="profile-header">
+    <!-- Student Profile Header Section - Only shown when logged in -->
+    <div v-if="isLoggedIn" class="profile-header">
       <div class="profile-container">
         <!-- Left side with profile info -->
         <div class="profile-left">
@@ -22,7 +22,9 @@
       </div>
     </div>
 
-    <!-- Welcome Section -->
+    
+
+    <!-- Welcome Section - Visible to all -->
     <div class="container text-center mt-5">
       <h1 class="welcome-title animated-fade">Welcome to the BS-Degree Program</h1>
       <p class="welcome-text animated-fade">
@@ -32,17 +34,18 @@
       </p>
     </div>
 
-    <!-- Chatbot Section -->
+    <!-- Chatbot Section - Always visible but with different content -->
     <div class="container text-center mt-4">
       <h3 class="animated-fade">Ask Your Pal</h3>
       <div class="chatbot-container">
         <img src="../assets/chatbot.png" alt="Chatbot" class="img-fluid chatbot-img animated-fade" />
-        <span class="chatbot-tooltip">Chatbot is accessible only on course pages</span>
+        <span v-if="!isLoggedIn" class="chatbot-tooltip"></span>
+        <span v-else class="chatbot-tooltip"></span>
       </div>
     </div>
     
-    <!-- Add Student Chatbot -->
-    <ChatBot_Student />
+    <!-- Add Student Chatbot only if logged in -->
+    <ChatBot_Student v-if="isLoggedIn" />
   </div>
 </template>
 
@@ -56,7 +59,8 @@ export default {
   },
   data() {
     return {
-      userName: 'Student'
+      userName: 'Student',
+      isLoggedIn: false
     }
   },
   mounted() {
@@ -64,6 +68,7 @@ export default {
     const userData = JSON.parse(localStorage.getItem('user'));
     if (userData && userData.name) {
       this.userName = userData.name;
+      this.isLoggedIn = true; // Set logged in status
     }
   },
   methods: {
@@ -73,6 +78,7 @@ export default {
     },
     handleLogout() {
       localStorage.removeItem('user');
+      this.isLoggedIn = false;
       this.$router.push('/login');
     }
   }
