@@ -1,3 +1,4 @@
+<!-- filepath: d:\Desktop\soft-engg-project-jan-2025-se-Jan-21-main\soft-engg-project-jan-2025-se-Jan-21-main\frontend\src\views\SupplymentaryManage.vue -->
 <template>
   <div class="container mt-4" v-if="isInstructor">
     <h1 class="text-center">Supplementary Content</h1>
@@ -46,6 +47,9 @@
       </ul>
       <p v-else class="text-muted">No files uploaded yet for Week {{ selectedViewWeek }}.</p>
     </div>
+    
+    <!-- Add TA ChatBot -->
+    <ChatBot_TA />
   </div>
 
   <!-- Access Denied Message -->
@@ -57,9 +61,13 @@
 
 <script>
 import axios from "axios";
+import ChatBot_TA from '@/components/ChatBot_TA.vue';
 
 export default {
   name: "SupplementaryContent",
+  components: {
+    ChatBot_TA
+  },
   data() {
     return {
       isInstructor: false, // RBAC Check
