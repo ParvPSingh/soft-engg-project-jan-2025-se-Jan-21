@@ -36,7 +36,7 @@ Depending on eligibility for OPPE1 & OPPE2, students will be allocated one of th
 - Must score **≥ 40/100** in at least **one programming exam** (OPPE1 or OPPE2).
 
 ## Final Course Score Calculation:
-Formula: **Capped at 100**.
+Formula: **T = 0.1 GAA1 (objective) + 0.1GAA2 (programming) + 0.1Qz1+ 0.4F+ 0.25 max(PE1, PE2) + 0.15 min(PE1, PE2) — capped to 100**.
 
 Where:
 - **GAA1:** Average score in the **best 10 out of 11** graded objective assignments.

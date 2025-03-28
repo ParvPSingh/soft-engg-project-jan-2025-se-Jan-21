@@ -70,4 +70,17 @@ Where:
 - **PE2:** OPPE2 score (**0** if not attempted).
 - **F:** Final exam score.
 
+## Python Course Grading Formula
+
+For the Python course, the following grading formula is used:
+
+T = 0.1 GAA1 (objective) + 0.1 GAA2 (programming) + 0.1 Qz1 + 0.4 F + 0.25 max(PE1, PE2) + 0.15 min(PE1, PE2) — capped to 100.
+
+Where:
+- GAA1: Average score in the best 10 out of 11 graded objective assignments
+- GAA2: Average score in the best 10 out of 11 graded programming assignments
+- Qz1: Quiz 1 score (0 if not attempted)
+- PE1: OPPE1 score (0 if not attempted)
+- PE2: OPPE2 score (0 if not attempted)
+- F: Final exam score
 ---
