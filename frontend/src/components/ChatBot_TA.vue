@@ -117,7 +117,7 @@
         animateBubble: false,
         suggestedQuestions: [
           "How do I grade programming assignments?",
-          "What's the policy for late submissions?",
+          "what's the python course grading formula?",
           "How to handle academic misconduct?"
         ]
       };
