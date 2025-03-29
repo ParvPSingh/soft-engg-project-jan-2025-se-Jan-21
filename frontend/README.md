@@ -31,6 +31,7 @@ axios
 mitt
 vue-router
 bootstrap
+chart.js
 ```
 
 ---
