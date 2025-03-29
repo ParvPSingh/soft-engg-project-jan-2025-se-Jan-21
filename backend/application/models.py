@@ -160,3 +160,18 @@ class StudentDoubt(db.Model):
     
     # Relationship with User model
     # student = db.relationship('User', backref=db.backref('doubts', lazy=True))
+
+class DoubtReply(db.Model):
+    __tablename__ = 'DoubtReply'
+    reply_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    doubt_id = db.Column(
+        db.Integer,
+        db.ForeignKey('StudentDoubt.doubt_id', name='fk_doubtreply_doubt_id'),  # Explicitly name the foreign key
+        nullable=False
+    )
+    reply = db.Column(db.Text, nullable=False)
+    seen = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.current_timestamp())
+    
+    # Relationship with StudentDoubt
+    doubt = db.relationship('StudentDoubt', backref=db.backref('replies', lazy=True, cascade="all, delete-orphan"))

@@ -22,14 +22,34 @@
           <th class="email-column">EMAIL</th>
           <th>QUERY</th>
           <th class="video-column">VIDEO</th>
+          <th class="reply-column">REPLY</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="doubt in doubts" :key="doubt.doubt_id">
           <td class="name-column">{{ doubt.student_name }}</td>
           <td class="email-column">{{ doubt.student_email }}</td>
-          <td>{{ doubt.doubt_text }}</td>
+          <td><b>{{ doubt.doubt_text }}</b></td>
           <td class="video-column">{{ doubt.video_title }}</td>
+          <td class="reply-column">
+            <!-- Show "View Reply" button if a reply exists -->
+            <div v-if="doubt.reply">
+              <button class="view-reply-button" @click="fetchReply(doubt)">View Reply</button>
+              <div v-if="doubt.showReplyBox" class="reply-display">
+                <p>{{ doubt.reply }}</p>
+                <button class="close-button" @click="doubt.showReplyBox = false">Close</button>
+              </div>
+            </div>
+            <!-- Show "Reply" button if no reply exists -->
+            <div v-else>
+              <div v-if="doubt.showReplyBox">
+                <textarea v-model="doubt.replyText" placeholder="Enter your reply here"></textarea>
+                <button @click="submitReply(doubt)">Submit</button>
+                <button @click="doubt.showReplyBox = false">Cancel</button>
+              </div>
+              <button v-else @click="doubt.showReplyBox = true">Reply</button>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -64,12 +84,45 @@ export default {
       try {
         this.loading = true;
         const response = await axios.get(`${this.baseURL}/api/student-doubts`);
-        this.doubts = response.data;
+        this.doubts = response.data.map(doubt => ({
+          ...doubt,
+          showReplyBox: false,
+          replyText: ''
+        }));
       } catch (error) {
         this.error = "Failed to fetch student queries. Please try again.";
         console.error("Error fetching doubts:", error);
       } finally {
         this.loading = false;
+      }
+    },
+    async submitReply(doubt) {
+      if (!doubt.replyText.trim()) {
+        alert("Reply cannot be empty.");
+        return;
+      }
+      try {
+        const response = await axios.post(`${this.baseURL}/api/doubts/reply`, {
+          doubt_id: doubt.doubt_id,
+          reply: doubt.replyText
+        });
+        alert("Reply submitted successfully!");
+        doubt.reply = doubt.replyText; // Update the reply in the UI
+        doubt.replyText = '';
+        doubt.showReplyBox = false;
+      } catch (error) {
+        console.error("Error submitting reply:", error);
+        alert("Failed to submit reply. Please try again.");
+      }
+    },
+    async fetchReply(doubt) {
+      try {
+        const response = await axios.get(`${this.baseURL}/api/doubts/${doubt.doubt_id}/reply`);
+        doubt.reply = response.data.reply; // Update the reply in the UI
+        doubt.showReplyBox = true;
+      } catch (error) {
+        console.error("Error fetching reply:", error);
+        alert("Failed to fetch reply. Please try again.");
       }
     }
   }
@@ -120,31 +173,58 @@ export default {
   text-align: left;
 }
 
-/* Different colors for specific columns */
-.name-column {
-  color: #3498db; /* Blue for name */
-  font-weight: bold;
+textarea {
+  width: 100%;
+  height: 60px;
+  margin-bottom: 10px;
+  resize: none;
 }
 
-.email-column {
-  color: #9b59b6; /* Purple for email */
+button {
+  margin-right: 5px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
 }
 
-.video-column {
-  color: #e74c3c; /* Red for video */
+button:hover {
+  background-color: #ddd;
 }
 
-/* Keep the header text white */
-th.name-column, th.email-column, th.video-column {
+.reply-column button {
+  background-color: #3498db;
   color: white;
 }
 
-.queries-table tr:nth-child(even) {
-  background-color: #f9f9f9;
+.reply-column button:hover {
+  background-color: #2980b9;
 }
 
-.queries-table tr:hover {
-  background-color: #f1f1f1;
+.view-reply-button {
+  background-color: #28a745; /* Green for "View Reply" */
+  color: white;
+}
+
+.view-reply-button:hover {
+  background-color: #218838;
+}
+
+.close-button {
+  background-color: #dc3545; /* Red for "Close" */
+  color: white;
+}
+
+.close-button:hover {
+  background-color: #c82333;
+}
+
+.reply-display {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
 }
 
 .loading, .no-data {

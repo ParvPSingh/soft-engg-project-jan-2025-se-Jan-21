@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from flask_restful import Resource, fields, marshal_with, reqparse, Api
 from application.database import db
-from application.models import User, Role, Course, Enrollment, SupplementaryContent, InstructorAlloted, Lecture, Assignment, QA, ProgQA, Scores, Queries, Feedback, KnowledgeBase
+from application.models import User, Role, Course, Enrollment, SupplementaryContent, InstructorAlloted, Lecture, Assignment, QA, ProgQA, Scores, Queries, Feedback, KnowledgeBase, StudentDoubt, DoubtReply
 from application.validation import ValidationError
 from datetime import datetime, date, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,9 +16,14 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
+from flask_cors import CORS  # Import CORS
+
 app = Flask(__name__)
 api = Api(app)
 api=Api()
+
+# Enable CORS for the Flask app
+CORS(app)
 
 user_out_fields={
     "id": fields.Integer, 
@@ -225,9 +230,10 @@ def login():
 
     if not user:
         return jsonify({"error_message": "User was Not Found"}), 404
-    
-    if not user.active:
-        return jsonify({"error_message": "You don't have access to the website"}), 401
+
+    # Explicitly check if the user is active
+    if not bool(user.active):  # Ensure `active` is interpreted as a boolean
+        return jsonify({"error_message": "Your account is inactive. Please contact the admin."}), 401
 
     if check_password_hash(user.password, password):
         return jsonify({
@@ -286,7 +292,8 @@ class UserAPI(Resource):
         db.session.commit()
 
         return new_user, 201
-    
+
+
 class CourseAPI(Resource):
     @marshal_with(course_out_fields)
     @auth_required("token")
@@ -630,8 +637,7 @@ class ProgQAAPI(Resource):
 
 class EnrollmentAPI(Resource):
     @marshal_with(enrollment_out_fields)
-    @auth_required("token")
-    @roles_accepted("Instructor")
+    
     def get(self, enrollment_id):
         enrollment = Enrollment.query.filter_by(enrollment_id=enrollment_id).first()
         if not enrollment:
@@ -702,11 +708,21 @@ class EnrollmentAPI(Resource):
         db.session.delete(enrollment)
         db.session.commit()
         return "", 204
+class FeedbackListAPI(Resource):
+    @marshal_with(feedback_out_fields)
+    
+    def get(self):
+        feedbacks = Feedback.query.all()
+        if not feedbacks:
+            raise ValidationError(status_code=404, error_code="FVE1006", error_message="No feedbacks found")
+        return feedbacks, 200
+
+# Add the new endpoint
+api.add_resource(FeedbackListAPI, "/api/feedback/full")
 
 class FeedbackAPI(Resource):
     @marshal_with(feedback_out_fields)
-    @auth_required("token")
-    @roles_accepted("Instructor", "TA")
+
     def get(self, feed_id):
         feedback = Feedback.query.filter_by(feed_id=feed_id).first()
         if not feedback:
@@ -1091,5 +1107,237 @@ api.add_resource(MyCoursesAPI, "/api/mycourses")
 api.add_resource(SupplementaryContentAPI, 
     "/api/supplementary",                        # POST: Upload
     "/api/supplementary/<int:course_id>/<int:week_no>",  # GET: Fetch files
-    "/api/supplementary/<int:pdf_id>"            # DELETE: Remove file
+    "/api/supplementary/<int:pdf_id>"            # DELETE: Remove file
 )
+
+class WeeklyAverageScoresAPI(Resource):
+    
+    def get(self):
+        """
+        Compute the average score for each week from the Scores table.
+        Returns a dictionary with week numbers as keys and average scores as values.
+        """
+        # Query all scores from the database
+        all_scores = Scores.query.all()
+        
+        if not all_scores:
+            return {"message": "No scores found in the database"}, 404
+        
+        # Group scores by week
+        scores_by_week = {}
+        for score in all_scores:
+            week = score.week_no
+            if week not in scores_by_week:
+                scores_by_week[week] = []
+            scores_by_week[week].append(score.score)
+        
+        # Calculate average for each week
+        weekly_averages = {}
+        for week, scores in scores_by_week.items():
+            weekly_averages[week] = sum(scores) / len(scores)
+        
+        return {
+            "weekly_averages": weekly_averages,
+            "total_students": len(set(score.score_user_id for score in all_scores)),
+            "total_weeks": len(weekly_averages)
+        }, 200
+
+# Add the new endpoint
+api.add_resource(WeeklyAverageScoresAPI, "/api/weekly-average-scores")
+
+class EnrolledStudentsAPI(Resource):
+    def get(self, course_id):
+        """
+        Fetch all enrolled students for a specific course.
+        Returns name, email, and active status of each student.
+        """
+        enrollments = Enrollment.query.filter_by(course_id=course_id).all()
+        if not enrollments:
+            return {"message": "No students enrolled in this course"}, 404
+
+        students = [
+            {
+                "name": enrollment.student.name,
+                "email": enrollment.student.email,
+                "active": enrollment.student.active
+            }
+            for enrollment in enrollments
+        ]
+        return {"students": students}, 200
+
+# Add the new endpoint
+api.add_resource(EnrolledStudentsAPI, "/api/enrolled-students/<int:course_id>")
+
+class AllEnrolledStudentsAPI(Resource):
+    def get(self):
+        """
+        Fetch all enrolled students across all courses.
+        Returns name, email, user_id, and active status of each student.
+        """
+        enrollments = Enrollment.query.distinct(Enrollment.student_id).all()  # Ensure no duplicates
+        if not enrollments:
+            return {"message": "No students enrolled in any course"}, 404
+
+        students = [
+            {
+                "user_id": enrollment.student.user_id,  # Include user_id
+                "name": enrollment.student.name,
+                "email": enrollment.student.email,
+                "active": enrollment.student.active
+            }
+            for enrollment in enrollments
+        ]
+        return {"students": students}, 200
+
+# Add the new endpoint
+api.add_resource(AllEnrolledStudentsAPI, "/api/enrolled-students")
+
+class DoubtReplyAPI(Resource):
+    def post(self):
+        """
+        Push a reply from the TA to the DoubtReply table for a doubt in the StudentDoubt table.
+        """
+        parser = reqparse.RequestParser()
+        parser.add_argument("doubt_id", type=int, required=True, help="Doubt ID is required")
+        parser.add_argument("reply", type=str, required=True, help="Reply content is required")
+        args = parser.parse_args()
+
+        doubt_id = args.get("doubt_id")
+        reply = args.get("reply")
+
+        # Validate if the doubt exists
+        doubt = StudentDoubt.query.filter_by(doubt_id=doubt_id).first()
+        if not doubt:
+            raise ValidationError(status_code=404, error_code="DRE1001", error_message="Doubt not found")
+
+        # Create a new reply entry
+        new_reply = DoubtReply(doubt_id=doubt_id, reply=reply)
+        db.session.add(new_reply)
+        db.session.commit()
+
+        return {
+            "message": "Reply added successfully",
+            "reply_id": new_reply.reply_id,
+            "student_name": doubt.student_name,
+            "student_email": doubt.student_email
+        }, 201
+
+# Update the endpoint
+api.add_resource(DoubtReplyAPI, "/api/doubts/reply")
+
+class DoubtReplyFetchAPI(Resource):
+    def get(self, doubt_id):
+        """
+        Fetch the reply for a specific doubt from the DoubtReply table.
+        """
+        # Validate if the doubt exists
+        doubt = StudentDoubt.query.filter_by(doubt_id=doubt_id).first()
+        if not doubt:
+            raise ValidationError(status_code=404, error_code="DRE1001", error_message="Doubt not found")
+
+        # Fetch the reply for the doubt
+        reply = DoubtReply.query.filter_by(doubt_id=doubt_id).first()
+        if not reply:
+            return {"message": "No reply found for this doubt"}, 404
+
+        return {
+            "reply_id": reply.reply_id,
+            "reply": reply.reply,
+            "created_at": reply.created_at.isoformat()
+        }, 200
+
+# Add the new endpoint
+api.add_resource(DoubtReplyFetchAPI, "/api/doubts/<int:doubt_id>/reply")
+
+class StudentDoubtAPI(Resource):
+    def get(self):
+        """
+        Fetch all student doubts along with their latest replies (if any).
+        """
+        doubts = StudentDoubt.query.all()
+        result = []
+        for doubt in doubts:
+            latest_reply = DoubtReply.query.filter_by(doubt_id=doubt.doubt_id).order_by(DoubtReply.created_at.desc()).first()
+            result.append({
+                "doubt_id": doubt.doubt_id,
+                "doubt_text": doubt.doubt_text,
+                "video_title": doubt.video_title,
+                "student_name": doubt.student_name,
+                "student_email": doubt.student_email,
+                "reply": latest_reply.reply if latest_reply else None,
+                "reply_seen": latest_reply.seen if latest_reply else None  # Include the seen status
+            })
+        return result, 200
+
+# Add the new endpoint
+api.add_resource(StudentDoubtAPI, "/api/student-doubts")
+
+class MarkRepliesAsSeenAPI(Resource):
+    def post(self):
+        """
+        Mark all replies for a specific student as seen.
+        """
+        parser = reqparse.RequestParser()
+        parser.add_argument("student_email", type=str, required=True, help="Student email is required")
+        args = parser.parse_args()
+
+        student_email = args.get("student_email")
+    
+        # Debugging: Log the student email
+        print(f"MarkRepliesAsSeenAPI called for student_email: {student_email}")
+
+        # Fetch all doubts for the student
+        doubts = StudentDoubt.query.filter_by(student_email=student_email).all()
+
+        if not doubts:
+            print(f"No doubts found for student_email: {student_email}")  # Debugging log
+            return {"message": "No doubts found for the student"}, 404
+
+        # Debugging: Log the fetched doubts
+        print(f"Fetched doubts for {student_email}: {[d.doubt_id for d in doubts]}")
+
+        # Mark all replies as seen
+        updated_replies = 0
+        for doubt in doubts:
+            for reply in doubt.replies:
+                if not reply.seen:  # Only update if not already seen
+                    reply.seen = True
+                    updated_replies += 1
+
+        # Debugging: Log the number of replies updated
+        print(f"Updated {updated_replies} replies as seen for {student_email}")
+
+        db.session.commit()
+        return {"message": f"All replies marked as seen. Total updated: {updated_replies}"}, 200
+
+# Add the new endpoint
+api.add_resource(MarkRepliesAsSeenAPI, "/api/replies/mark-seen")
+
+class BlockStudentAPI(Resource):
+    def put(self, user_id):
+        """
+        Toggle the active status of a student.
+        """
+        parser = reqparse.RequestParser()
+        parser.add_argument("active", type=bool, required=True, help="Active status (true/false) is required")
+        args = parser.parse_args()
+
+        active = args.get("active")
+        user = User.query.filter_by(user_id=user_id).first()
+
+        if not user:
+            return {"error": "User not found"}, 404  # Return a JSON-serializable object
+
+        try:
+            user.active = active
+            db.session.commit()
+            status = "unblocked" if active else "blocked"
+            return {"message": f"User successfully {status}", "active": user.active}, 200  # Return JSON
+        except Exception as e:
+            db.session.rollback()
+            return {"error": "An error occurred while updating the user's status"}, 500  # Return JSON
+
+# Add the new endpoint
+api.add_resource(BlockStudentAPI, "/api/user/<int:user_id>/block")
+
+

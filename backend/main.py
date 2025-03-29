@@ -15,13 +15,16 @@ from werkzeug.security import generate_password_hash
 from dotenv import load_dotenv
 import os
 import logging
-from langchain.document_loaders import TextLoader
+from langchain_community.document_loaders import TextLoader  # Updated import
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_together import TogetherEmbeddings
-from langchain_community.vectorstores import Qdrant
+from langchain_community.vectorstores import Qdrant  # Updated import
 from qdrant_client import QdrantClient
 
 from qdrant_client.http.models import Distance, VectorParams, HnswConfigDiff
+
+# Import Flask-Migrate
+from flask_migrate import Migrate
 
 # Load environment variables from .env file
 load_dotenv()
@@ -130,6 +133,10 @@ def create_app():
     db.init_app(app)
     api.init_app(app)
     app.security = Security(app, datastore=datastore)
+    
+    # Initialize Flask-Migrate
+    migrate = Migrate(app, db)
+
     with app.app_context():
         import application.controllers
         db.create_all()

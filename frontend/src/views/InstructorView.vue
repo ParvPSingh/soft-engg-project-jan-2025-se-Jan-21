@@ -11,7 +11,7 @@
       <div class="actions">
         <button @click="goToSupplementaryManage" class="manage-content">Manage Supplementary Content</button>
         <button @click="goToEnrolledStudents" class="manage-students">Manage Enrolled Students</button>
-        <button @click="goToStudentQueries" class="manage-queries">Manage Students Queries</button>
+        <button @click="goToStudentQueries" class="manage-queries">Students Feedback</button>
       </div>
 
       <div v-if="courses.length" class="section">
@@ -43,9 +43,10 @@
           </li>
         </ul>
       </div>
+    
       <div class="analytics">
-        <h3>Average Assignment Scores</h3>
-        <img src="../assets/tagraph.png" alt="Assignment Scores Chart" style="width: 80%;" class="analytics-image" />
+        <h3>Weekly Average Assignment Scores</h3>
+        <canvas id="weeklyAverageChartInstructorView"></canvas>
       </div>
     </div>
 
@@ -57,6 +58,9 @@
 <script>
 import axios from "axios";
 import ChatBot_Instructor from "@/components/ChatBot_Instructor.vue";
+import { Chart, registerables } from "chart.js";
+
+Chart.register(...registerables);
 
 export default {
   name: "InstructorDashboard",
@@ -113,6 +117,86 @@ export default {
         console.error("Error fetching feedback:", error);
       }
     },
+    async fetchWeeklyAverageScores() {
+      try {
+        const response = await axios.get("http://127.0.0.1:5000/api/weekly-average-scores");
+        const data = response.data.weekly_averages;
+        const labels = Object.keys(data).map(week => `Week ${week}`);
+        const scores = Object.values(data);
+
+        this.renderChart(labels, scores);
+      } catch (error) {
+        console.error("Error fetching weekly average scores:", error);
+      }
+    },
+    renderChart(labels, scores) {
+  const ctx = document.getElementById("weeklyAverageChartInstructorView").getContext("2d");
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Average Score",
+        data: scores,
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.8)",
+          "rgba(54, 162, 235, 0.8)",
+          "rgba(255, 206, 86, 0.8)",
+          "rgba(75, 192, 192, 0.8)"
+        ],
+        borderColor: [
+          "rgba(255, 99, 132, 1)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(255, 206, 86, 1)",
+          "rgba(75, 192, 192, 1)"
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: 1500,  // Animation duration in milliseconds
+        easing: "easeOutBounce"  // Smooth bounce effect
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: "Average Score"
+          },
+          suggestedMin: 0,
+          animations: {
+            y: {
+              from: 0
+            }
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: "Weeks"
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `Score: ${context.raw}`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+,
     viewCourse(course_id) {
       this.$router.push(`/course/${course_id}`);
     },
@@ -120,10 +204,10 @@ export default {
       this.$router.push("/supplymentary");
     },
     goToEnrolledStudents() {
-      this.$router.push("/enrolled-students");
+      this.$router.push("/managestudents");
     },
     goToStudentQueries() {
-      this.$router.push("/student-queries");
+      this.$router.push("/feedback");
     }
   },
   mounted() {
@@ -131,6 +215,7 @@ export default {
     this.fetchStudents();
     this.fetchAssignments();
     this.fetchFeedback();
+    this.fetchWeeklyAverageScores();
   }
 };
 </script>
@@ -202,4 +287,26 @@ button {
   border: none;
   cursor: pointer;
 }
+
+.analytics {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+canvas {
+  max-height: 300px;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+
+
+
+.analytics {
+  margin-top: 2rem;
+  text-align: center;
+  animation: fadeInGraph 5s ease-in-out;
+}
+ 
+
 </style>

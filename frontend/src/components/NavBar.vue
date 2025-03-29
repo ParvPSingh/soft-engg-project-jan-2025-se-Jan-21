@@ -70,9 +70,14 @@
       handleLogout() {
         localStorage.removeItem("user"); // Remove user from storage
         this.user = null;
-        eventBus.emit("user-updated"); // Notify other components (e.g., Home)
+        eventBus.emit("user-updated"); // Notify other components
         this.$router.push("/"); // Redirect to homepage
+
+        setTimeout(() => {
+          window.location.reload(); // Hard reload to clear user state everywhere
+        }, 10); // Small delay to allow navigation before reload
       },
+
     },
   };
   </script>

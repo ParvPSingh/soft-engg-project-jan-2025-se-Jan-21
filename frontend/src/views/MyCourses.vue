@@ -5,6 +5,10 @@
       <nav class="nav-links">
         <router-link to="/" class="nav-item">Home</router-link>
         <router-link to="/mycourses" class="nav-item">My Courses</router-link>
+        <router-link to="/studentqueries" class="nav-item">
+          My Queries
+          <img v-if="hasUnseenReplies" src="../assets/notification.png" alt="Notification" class="notification-icon" />
+        </router-link>
         <router-link to="/aboutpage" class="nav-item">About</router-link>
       </nav>
     </header>
@@ -62,10 +66,37 @@
 
 <script>
 import ChatBot_Student from '@/components/ChatBot_Student.vue';
+import axios from 'axios';
 
 export default {
   components: {
     ChatBot_Student
+  },
+  data() {
+    return {
+      hasUnseenReplies: false // Tracks if there are unseen replies
+    };
+  },
+  mounted() {
+    this.checkUnseenReplies();
+  },
+  methods: {
+    async checkUnseenReplies() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user.email) return;
+
+        // Fetch unseen replies
+        const response = await axios.get('http://127.0.0.1:5000/api/student-doubts');
+        const unseenReplies = response.data.some(
+          query => query.student_email === user.email && query.reply && !query.reply_seen
+        );
+
+        this.hasUnseenReplies = unseenReplies;
+      } catch (error) {
+        console.error("Error checking unseen replies:", error);
+      }
+    }
   }
 };
 </script>
@@ -219,6 +250,13 @@ export default {
   transform: scale(1.05);
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   background-color: #3498db;
+}
+
+/* Notification Icon */
+.notification-icon {
+  width: 30px;
+  height: 30px;
+  margin-left: 0px;
 }
 
 /* Responsive Design */

@@ -17,8 +17,11 @@ import AboutView from "@/views/AboutView.vue";
 import TADashboardView from '@/views/TADashboardView.vue';
 
 import SupplymentaryContent from "@/views/SupplymentaryManage.vue";
-
+import InstructorFeedback from "@/views/InstructorFeedback.vue";
+import StudentQueries from "@/views/StudentQueries.vue";
+import ManageStudents from "@/views/ManageStudents.vue";
 const routes = [
+  
   {
     path: "/",
     name: "home",
@@ -103,6 +106,22 @@ const routes = [
     path: "/supplymentary",
     name: "SupplymentaryContent",
     component: SupplymentaryContent
+  },
+  {
+    path: "/feedback",
+    name: "InstructorFeedback",
+    component: InstructorFeedback
+  },
+  {
+    path: "/studentqueries",
+    name: "studentqueries",
+    component: StudentQueries
+  },
+  {
+    path: "/managestudents",
+    name: "managestudents",
+    component: ManageStudents
+
   }
 
 ];
