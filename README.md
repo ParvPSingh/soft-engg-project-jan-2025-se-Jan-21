@@ -12,25 +12,25 @@ This project is an **AI-driven chatbot** designed to assist students with academ
 - **APIs:** OpenAI and other llms API 
 
 ## 📂 Project Structure  
-/project-root
-│── /frontend # Vue.js application
-│ ├── /src
-│ │ ├── /components # Vue components
-│ │ ├── /views # Router views/pages
-│ │ ├── router.js # Vue Router setup
-│ │ ├── App.vue # Main App component
-│ │ ├── main.js # Vue entry point
-│ ├── public # Static assets
-│── /backend # Flask API
-│ ├── main.py # Main Flask app
-│ ├── /application #app files 
-| | ├── controllers.py
-| | ├── resources.py #apis
-| | ├── controllers.py
-| | ├── models.py
-│── requirements.txt # Python dependencies
-│── package.json # Node.js dependencies
-│── README.md # Project documentation
+/project-root  
+│── /frontend  # Vue.js application  
+│   ├── /src  
+│   │   ├── /components  # Vue components  
+│   │   ├── /views  # Router views/pages  
+│   │   ├── router.js  # Vue Router setup  
+│   │   ├── App.vue  # Main App component  
+│   │   ├── main.js  # Vue entry point  
+│   ├── public  # Static assets  
+│── /backend  # Flask API  
+│   ├── main.py  # Main Flask app  
+│   ├── /application  # App files  
+│   │   ├── controllers.py  
+│   │   ├── resources.py  # APIs  
+│   │   ├── models.py  
+│── requirements.txt  # Python dependencies  
+│── package.json  # Node.js dependencies  
+│── README.md  # Project documentation  
+
 
 
 # 🚀 Installation & Setup
