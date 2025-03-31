@@ -14,19 +14,35 @@ This project is an **AI-driven chatbot** designed to assist students with academ
 ## 📂 Project Structure  
 /project-root  
 │── /frontend  # Vue.js application  
-│   ├── /src  
+│   ├── /public #contains favicons
+│   ├── /src 
+│   ├── ├── /assets # necessary static files
 │   │   ├── /components  # Vue components  
 │   │   ├── /views  # Router views/pages  
-│   │   ├── router.js  # Vue Router setup  
+│   │   ├── /router
+│   │   ├── ├── /index.js  # Vue Router setup  
 │   │   ├── App.vue  # Main App component  
 │   │   ├── main.js  # Vue entry point  
-│   ├── public  # Static assets  
+│   ├── /#all other necessary fie=les with vue.config.js and frontend readme.md files. 
 │── /backend  # Flask API  
-│   ├── main.py  # Main Flask app  
+│   ├── main.py  # Main Flask app 
+│   ├── student_chatbot.py  # Student Chatbot 
+│   ├── ta_chatbot.py  # TA and instructor Chatbot 
+│   ├── local_sb.sqlite3 # DataBase
+│   ├── requirements_cleaned.txt # requirements.txt file ( required python packages)
+│   ├── readme.md # backend readme file
+│   ├── / extra py files  # Required for inital setup (for demo purpose)
 │   ├── /application  # App files  
-│   │   ├── controllers.py  
+│   │   ├── controllers.py  #controller of API
 │   │   ├── resources.py  # APIs  
 │   │   ├── models.py  
+│   │   ├── extra py files # Configuration files  
+│   ├── /Chatbot  # Chatbot files  
+│   │   ├── Chatbot files  # Necessary python notebooks and rag files  
+│   ├── /migrations  # Database migration files  
+│   ├── /server   
+│   ├── /static   
+│   ├── ├──/uploads # Uploaded Supplymentary Content files   
 │── requirements.txt  # Python dependencies  
 │── package.json  # Node.js dependencies  
 │── README.md  # Project documentation  
@@ -45,6 +61,14 @@ This project is an **AI-driven chatbot** designed to assist students with academ
 2. Install dependencies:
    ```sh
    npm install
+   ```
+   If required install extra packages manually
+   ```sh
+   axios
+   mitt
+   vue-router
+   bootstrap
+   chart.js
    ```
 
 3. Start the Vue.js server:
@@ -75,12 +99,12 @@ This project is an **AI-driven chatbot** designed to assist students with academ
 
 3. Install Python dependencies:
    ```sh
-   pip install -r requirements.txt
+   pip install -r requirements_cleaned.txt
    ```
 
-4. Start the Flask server:
+4. Start the Flask server: (inside backend folder)
    ```sh
-   python app.py
+   python main.py
    ```
 
 5. The API should now be running at:
