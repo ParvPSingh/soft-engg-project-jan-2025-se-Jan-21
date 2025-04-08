@@ -156,9 +156,10 @@ def create_app():
         try:
             data = request.get_json()
             user_query = data.get('message')
+            session_id = data.get("session_id","default_user")
             # This will use the pre-initialized vector store from student_chatbot module
             retrieved_context = retrieve_context_student(user_query)
-            response = call_autobot_student(user_query, retrieved_context)
+            response = call_autobot_student(user_query, retrieved_context,session_id)
             return jsonify({'response': response.content})
         except Exception as e:
             print(f"Error in student chatbot: {str(e)}")
